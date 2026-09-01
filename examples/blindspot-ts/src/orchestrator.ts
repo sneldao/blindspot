@@ -1,5 +1,9 @@
 // Orchestrator — coordinates the full investigation pipeline.
 //
+// Emits typed events via a callback. The SSE server forwards these to the
+// live UI; the CLI mode prints them to the console. The same orchestrator
+// powers both.
+//
 // Flow:
 //   1. Resolve ENS name locally (public RPC, not privacy-sensitive)
 //   2. Spin up Solari sandbox → run Mobula API calls inside it (ephemeral)
@@ -7,9 +11,6 @@
 //   4. Analyze combined data → risk score
 //   5. Generate HTML report with privacy manifest
 //   6. Tear down: kill sandbox, close browser, download recording
-//
-// The sandbox and browser run concurrently — the Mobula calls and web scraping
-// happen in parallel, cutting total investigation time.
 
 import { resolveEns } from "./ens.js"
 import { fetchOnchainData } from "./mobula.js"
@@ -18,57 +19,107 @@ import { createStealthBrowser, enrichOffChain, closeBrowser, downloadRecording }
 import { assessRisk } from "./analyzer.js"
 import { generateReport } from "./report.js"
 import type { InvestigationReport, PrivacyManifest } from "./types.js"
+import type { EventCallback, InvestigationEvent } from "./events.js"
 import { mkdirSync } from "node:fs"
 import { join } from "node:path"
 
 const SOLARI_API_KEY = process.env.SOLARI_API_KEY!
 const MOBULA_API_KEY = process.env.MOBULA_API_KEY!
 
-export async function investigate(ensName: string, outputDir = "reports"): Promise<string> {
+export interface InvestigateOptions {
+  outputDir?: string
+  onEvent?: EventCallback
+}
+
+export async function investigate(
+  ensName: string,
+  opts: InvestigateOptions = {},
+): Promise<string> {
+  const { outputDir = "reports", onEvent } = opts
+  const emit = (event: InvestigationEvent) => {
+    onEvent?.(event)
+  }
+
   const startTime = Date.now()
-  console.log(`\n┌─ Blindspot: investigating ${ensName}`)
-  console.log(`│  Privacy: ephemeral sandbox + stealth residential proxy`)
-  console.log(`│`)
+
+  emit({ type: "started", ensName })
 
   // 1. ENS resolution — local, public RPC
-  console.log(`├─ [1/5] Resolving ENS name...`)
+  emit({ type: "phase", phase: "resolving", status: "working" })
   const target = await resolveEns(ensName)
-  console.log(`│  ${target.name} → ${target.address}`)
-  if (target.aliases.length > 0) console.log(`│  aliases: ${target.aliases.join(", ")}`)
-  if (target.website) console.log(`│  website: ${target.website}`)
-  if (target.twitter) console.log(`│  twitter: @${target.twitter.replace(/^@/, "")}`)
+  emit({
+    type: "ens:resolved",
+    name: target.name,
+    address: target.address,
+    aliases: target.aliases,
+    website: target.website,
+    twitter: target.twitter,
+  })
+  emit({ type: "phase", phase: "resolving", status: "done", detail: target.address })
 
   // 2 + 3. Spin up sandbox and stealth browser concurrently
-  console.log(`├─ [2/5] Spawning Solari sandbox + stealth browser...`)
   const [sandboxHandle, browserHandle] = await Promise.all([
     createSandbox(SOLARI_API_KEY),
     createStealthBrowser(SOLARI_API_KEY),
   ])
 
+  emit({ type: "sandbox:booted", sandboxId: sandboxHandle.id })
+  emit({ type: "phase", phase: "sandbox", status: "done", detail: sandboxHandle.id })
+
+  emit({
+    type: "browser:connected",
+    egressIp: "detecting...",
+    proxyCountry: browserHandle.proxy?.country ?? "us",
+  })
+
   let onchain, offChain
   try {
     // Run onchain analysis (in sandbox) and off-chain enrichment (stealth browser) in parallel
-    console.log(`├─ [3/5] Running onchain analysis + off-chain enrichment in parallel...`)
+    emit({ type: "phase", phase: "onchain", status: "working" })
+    emit({ type: "phase", phase: "offchain", status: "working" })
+
     ;[onchain, offChain] = await Promise.all([
       fetchOnchainData(sandboxHandle.sandbox, target.address, MOBULA_API_KEY),
       enrichOffChain(browserHandle, target),
     ])
-    console.log(`│  onchain: ${onchain.portfolio.length} assets, $${onchain.totalValueUSD.toFixed(0)} total`)
-    console.log(`│  offchain: ${offChain.length} pages enriched via stealth proxy`)
+
+    emit({
+      type: "mobula:data",
+      totalValueUSD: onchain.totalValueUSD,
+      assetCount: onchain.portfolio.length,
+      realizedPnlUSD: onchain.totalRealizedPnlUSD,
+    })
+    emit({
+      type: "phase",
+      phase: "onchain",
+      status: "done",
+      detail: `$${formatCompact(onchain.totalValueUSD)} · ${onchain.portfolio.length} assets`,
+    })
+
+    // Update browser egress IP if we got it from off-chain enrichment
+    if (offChain.length > 0 && offChain[0].egressIp !== "detecting...") {
+      emit({ type: "browser:connected", egressIp: offChain[0].egressIp, proxyCountry: browserHandle.proxy?.country ?? "us" })
+    }
+    emit({ type: "offchain:data", sourceCount: offChain.length })
+    emit({
+      type: "phase",
+      phase: "offchain",
+      status: "done",
+      detail: `${offChain.length} sources`,
+    })
   } finally {
     // 6. Tear down — always, even on error
-    console.log(`├─ [5/5] Tearing down — killing sandbox, closing browser...`)
     await destroySandbox(sandboxHandle)
     await closeBrowser(browserHandle)
   }
 
   // 4. Risk assessment
-  console.log(`├─ [4/5] Assessing risk...`)
+  emit({ type: "analyzing" })
+  emit({ type: "phase", phase: "analyzing", status: "working" })
   const risk = assessRisk(target, onchain, offChain)
-  console.log(`│  risk score: ${risk.overallScore}/100 — ${risk.summary}`)
+  emit({ type: "phase", phase: "analyzing", status: "done", detail: `${risk.overallScore}/100` })
 
   // Download session recording (for demo)
-  console.log(`│  downloading session recording...`)
   const recording = await downloadRecording(browserHandle)
 
   // Build privacy manifest
@@ -112,10 +163,30 @@ export async function investigate(ensName: string, outputDir = "reports"): Promi
   }
 
   const reportPath = generateReport(report, outputDir)
-  console.log(`│`)
-  console.log(`└─ Report: ${reportPath}`)
-  console.log(`   Duration: ${report.duration.toFixed(1)}s`)
-  console.log(`   Privacy: sandbox destroyed, browser closed, recording ${recording.available ? "saved" : "unavailable"}\n`)
+
+  const riskLabel = risk.overallScore >= 60 ? "HIGH RISK"
+    : risk.overallScore >= 30 ? "MODERATE" : "LOW RISK"
+
+  emit({
+    type: "complete",
+    report: {
+      riskScore: risk.overallScore,
+      riskLabel,
+      riskSummary: risk.summary,
+      privacyVerdict: "sandbox destroyed · no trace · you were never here",
+      reportPath,
+      sandboxId: sandboxHandle.id,
+      egressIp: offChain[0]?.egressIp ?? "unknown",
+      sandboxDestroyed: true,
+      recordingAvailable: recording.available,
+    },
+  })
 
   return reportPath
+}
+
+function formatCompact(n: number): string {
+  if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M"
+  if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(1) + "K"
+  return n.toFixed(0)
 }

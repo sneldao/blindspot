@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/index.ts",
+    "ui": "tsx src/index.ts",
+    "cli": "tsx src/index.ts vitalik.eth",
     "demo": "tsx src/index.ts vitalik.eth"
   },
   "dependencies": {
