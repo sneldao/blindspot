@@ -1,13 +1,20 @@
 // Client entry point — wires the 3D scene, scroll system, SSE events,
 // and DOM overlays into the full Blindspot experience.
 //
-// This is the bundled JS that runs in the browser.
+// Landing sequence:
+//   1. Page loads → camera at Z=12, fog
+//   2. Redacted dossier panels build in the scene
+//   3. Camera dollies in to Z=5 over 1.5s (the "you've arrived" moment)
+//   4. Mouse parallax active — camera shifts ±0.3 with mouse
+//   5. User types ENS name, hits enter
+//   6. SSE events stream in → redaction bars slide away per phase
+//   7. On complete → panels replaced with real data, camera travels curve
 
 import * as THREE from "three"
 import { createScene } from "./scene.js"
 import { createScrollSystem } from "./scroll.js"
-import { getCameraPosition, getLookAtTarget, getActivePanel, PANEL_COUNT } from "./camera-curve.js"
-import { buildPanels, type PanelSystem, type InvestigationData } from "./panels.js"
+import { getCameraPosition, getLookAtTarget, getActivePanel } from "./camera-curve.js"
+import { buildPanels, buildRedactedPanels, type PanelSystem, type InvestigationData } from "./panels.js"
 import { pickChartSegment } from "./chart.js"
 
 // ── DOM elements ──
@@ -29,8 +36,44 @@ let scrollSystem = createScrollSystem(onScrollUpdate)
 let revealedPanels = new Set<number>()
 let reportPath: string | null = null
 let raycaster = new THREE.Raycaster()
-let pointer = new THREE.Vector2(-10, -10) // off-screen initially
+let pointer = new THREE.Vector2(-10, -10)
 let hoveredSegment: THREE.Mesh | null = null
+
+// Mouse parallax state
+let mouseX = 0
+let mouseY = 0
+let parallaxX = 0
+let parallaxY = 0
+
+// Camera dolly state
+let dollyProgress = 0 // 0 = at Z=12, 1 = at Z=5 (normal scroll position)
+let isDollying = false
+
+// ── Landing sequence ──
+async function initLanding() {
+  // Build redacted panels immediately
+  panelSystem = await buildRedactedPanels()
+  ctx.scene.add(panelSystem.group)
+
+  // Start dolly-in animation
+  isDollying = true
+  const dollyStart = performance.now()
+  const dollyDuration = 1500
+
+  function dolly() {
+    const elapsed = performance.now() - dollyStart
+    const t = Math.min(elapsed / dollyDuration, 1)
+    // ease-out cubic
+    dollyProgress = 1 - Math.pow(1 - t, 3)
+    if (t < 1) {
+      requestAnimationFrame(dolly)
+    } else {
+      isDollying = false
+      dollyProgress = 1
+    }
+  }
+  dolly()
+}
 
 // ── Scroll handler ──
 function onScrollUpdate(progress: number) {
@@ -49,14 +92,39 @@ function onScrollUpdate(progress: number) {
 
 // ── Render loop ──
 function render() {
-  const progress = scrollSystem.getProgress()
+  const scrollProgress = scrollSystem.getProgress()
 
-  // Camera position from curve
-  const camPos = getCameraPosition(progress)
+  // Smooth mouse parallax (lerp toward target)
+  parallaxX += (mouseX - parallaxX) * 0.05
+  parallaxY += (mouseY - parallaxY) * 0.05
+
+  // Camera position: blend dolly-in with scroll-driven curve position
+  let camPos: THREE.Vector3
+  if (isDollying || dollyProgress < 1) {
+    // During dolly: interpolate from Z=12 approach to curve start (Z=5)
+    const curveStart = getCameraPosition(0)
+    const approach = new THREE.Vector3(0, 0, 12)
+    camPos = new THREE.Vector3().lerpVectors(approach, curveStart, dollyProgress)
+  } else {
+    // Normal: scroll-driven curve position + mouse parallax
+    camPos = getCameraPosition(scrollProgress)
+  }
+
+  // Apply parallax offset (not during dolly)
+  if (dollyProgress >= 1) {
+    camPos.x += parallaxX * 0.3
+    camPos.y += parallaxY * 0.3
+  }
+
   ctx.camera.position.copy(camPos)
 
   // Camera look-at
-  const lookTarget = getLookAtTarget(progress)
+  const lookTarget = getLookAtTarget(scrollProgress)
+  // Apply parallax to look-at too (subtle)
+  if (dollyProgress >= 1) {
+    lookTarget.x += parallaxX * 0.15
+    lookTarget.y += parallaxY * 0.15
+  }
   ctx.camera.lookAt(lookTarget)
 
   // Point light follows camera
@@ -66,15 +134,14 @@ function render() {
 
   // Chart rotation (scroll-driven, Panel 2 zone: progress 0.3-0.5)
   if (panelSystem?.chart) {
-    const chartProgress = THREE.MathUtils.clamp((progress - 0.3) / 0.2, 0, 1)
-    panelSystem.chart.group.rotation.z = (chartProgress - 0.5) * (Math.PI / 12) // ±7.5 degrees
+    const chartProgress = THREE.MathUtils.clamp((scrollProgress - 0.3) / 0.2, 0, 1)
+    panelSystem.chart.group.rotation.z = (chartProgress - 0.5) * (Math.PI / 12)
   }
 
-  // Chart hover (raycasting)
-  if (panelSystem?.chart && getActivePanel(progress) === 2) {
+  // Chart hover (raycasting) — only when panel 2 is active and chart exists
+  if (panelSystem?.chart && getActivePanel(scrollProgress) === 2) {
     const hit = pickChartSegment(raycaster, pointer, ctx.camera, panelSystem.chart)
     if (hit !== hoveredSegment) {
-      // Reset previous
       if (hoveredSegment) {
         const mat = hoveredSegment.material as THREE.MeshStandardMaterial
         mat.color.set((hoveredSegment.userData as { originalColor: string }).originalColor)
@@ -92,7 +159,6 @@ function render() {
       }
     }
     if (hoveredSegment) {
-      // Update tooltip position to projected screen coords
       const worldPos = new THREE.Vector3()
       hoveredSegment.getWorldPosition(worldPos)
       worldPos.project(ctx.camera)
@@ -113,11 +179,22 @@ function render() {
   requestAnimationFrame(render)
 }
 
-// ── Pointer tracking for raycasting ──
+// ── Pointer tracking for parallax + raycasting ──
 window.addEventListener("pointermove", (e) => {
-  pointer.x = (e.clientX / window.innerWidth) * 2 - 1
-  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1
+  // Normalized -1 to 1
+  mouseX = (e.clientX / window.innerWidth) * 2 - 1
+  mouseY = -(e.clientY / window.innerHeight) * 2 + 1
+  // For raycasting
+  pointer.x = mouseX
+  pointer.y = mouseY
 })
+
+// ── Reveal redaction bars as investigation progresses ──
+function revealPanelRedaction(panelIdx: number) {
+  if (panelSystem && panelSystem.redactions[panelIdx]) {
+    panelSystem.redactions[panelIdx].revealAll()
+  }
+}
 
 // ── Start investigation ──
 async function startInvestigation(name: string) {
@@ -126,7 +203,6 @@ async function startInvestigation(name: string) {
   loadingText.style.opacity = "1"
   errorText.style.opacity = "0"
 
-  // Collect SSE events into data
   const data: Partial<InvestigationData> = {
     ensName: name,
     topHoldings: [],
@@ -145,7 +221,9 @@ async function startInvestigation(name: string) {
         data.aliases = event.aliases || []
         data.website = event.website
         data.twitter = event.twitter
-        loadingText.textContent = "resolving identity..."
+        loadingText.textContent = "identity declassified..."
+        // Reveal panel 1 redaction
+        revealPanelRedaction(1)
         break
 
       case "sandbox:booted":
@@ -164,11 +242,15 @@ async function startInvestigation(name: string) {
         data.totalValueUSD = event.totalValueUSD
         data.assetCount = event.assetCount
         data.realizedPnlUSD = event.realizedPnlUSD
-        loadingText.textContent = "fetching onchain data..."
+        loadingText.textContent = "onchain data declassified..."
+        // Reveal panel 2 redaction
+        revealPanelRedaction(2)
         break
 
       case "offchain:data":
-        loadingText.textContent = "enriching off-chain context..."
+        loadingText.textContent = "off-chain context declassified..."
+        // Reveal panel 3 redaction
+        revealPanelRedaction(3)
         break
 
       case "analyzing":
@@ -186,6 +268,9 @@ async function startInvestigation(name: string) {
         data.egressIp = r.egressIp
         data.proxyCountry = data.proxyCountry || "us"
         reportPath = r.reportPath
+
+        // Reveal verdict redaction
+        revealPanelRedaction(4)
 
         // Fill defaults for missing fields
         if (!data.address) data.address = "unknown"
@@ -208,7 +293,8 @@ async function startInvestigation(name: string) {
             : []
         }
 
-        await loadPanels(data as InvestigationData)
+        // Wait a moment for redaction bars to animate, then swap panels
+        setTimeout(() => loadRealPanels(data as InvestigationData), 1200)
         break
 
       case "error":
@@ -229,21 +315,17 @@ async function startInvestigation(name: string) {
   }
 }
 
-// ── Load panels into the scene ──
-async function loadPanels(data: InvestigationData) {
-  // Dispose old panels if any
+// ── Replace redacted panels with real data panels ──
+async function loadRealPanels(data: InvestigationData) {
   if (panelSystem) {
     ctx.scene.remove(panelSystem.group)
     panelSystem.dispose()
   }
 
   loadingText.style.opacity = "0"
-
-  // Reset scroll to top
   scrollSystem.scrollToTop()
   revealedPanels.clear()
 
-  // Build new panels
   panelSystem = await buildPanels(data)
   ctx.scene.add(panelSystem.group)
 
@@ -251,8 +333,7 @@ async function loadPanels(data: InvestigationData) {
   revealedPanels.add(0)
   panelSystem.panels[0]?.forEach((p) => p.reveal())
 
-  // Show verdict overlay buttons when user reaches Panel 4
-  // (handled by scroll progress check in render loop via a watcher)
+  // Show verdict overlay when user reaches Panel 4
   const checkVerdict = setInterval(() => {
     if (getActivePanel(scrollSystem.getProgress()) === 4) {
       verdictOverlay.style.opacity = "1"
@@ -263,17 +344,21 @@ async function loadPanels(data: InvestigationData) {
 }
 
 // ── Reset for new investigation ──
-function reset() {
+async function reset() {
   if (panelSystem) {
     ctx.scene.remove(panelSystem.group)
     panelSystem.dispose()
-    panelSystem = null
   }
   revealedPanels.clear()
   scrollSystem.scrollToTop()
   verdictOverlay.style.opacity = "0"
   verdictOverlay.style.pointerEvents = "none"
   errorText.style.opacity = "0"
+
+  // Rebuild redacted panels for the landing
+  panelSystem = await buildRedactedPanels()
+  ctx.scene.add(panelSystem.group)
+
   searchOverlay.style.opacity = "1"
   searchOverlay.style.pointerEvents = "auto"
   searchInput.value = ""
@@ -288,7 +373,7 @@ searchForm.addEventListener("submit", (e) => {
   startInvestigation(name)
 })
 
-newBtn.addEventListener("click", reset)
+newBtn.addEventListener("click", () => reset())
 
 downloadBtn.addEventListener("click", () => {
   if (reportPath) {
@@ -296,13 +381,13 @@ downloadBtn.addEventListener("click", () => {
   }
 })
 
-// Escape key resets
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && panelSystem) reset()
 })
 
-// ── Start render loop ──
+// ── Start ──
 render()
+initLanding()
 searchInput.focus()
 
 // ── Helpers ──

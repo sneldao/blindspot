@@ -7,6 +7,11 @@ import { htmlToTexture } from "./texture.js"
 import { createClipMaterial, type ClipDirection } from "./clip-material.js"
 import { createDonutChart, type DonutChart, type ChartSegment } from "./chart.js"
 import { PANEL_Z } from "./camera-curve.js"
+import {
+  createRedactionGroup,
+  REDACTION_LAYOUTS,
+  type RedactionGroup,
+} from "./redaction.js"
 
 export interface PanelMesh {
   mesh: THREE.Mesh
@@ -58,6 +63,24 @@ const panelCSS = `
     .accent { color: oklch(0.62 0.14 40); }
     .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: oklch(0.45 0.01 270); margin-bottom: 8px; }
     .link { color: oklch(0.62 0.14 40); text-decoration: underline; text-decoration-color: oklch(0.62 0.14 40 / 0.3); text-underline-offset: 3px; }
+    .stamp {
+      display: inline-block;
+      border: 2px solid oklch(0.62 0.14 40);
+      color: oklch(0.62 0.14 40);
+      padding: 4px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transform: rotate(-3deg);
+      opacity: 0.8;
+    }
+    .redacted-line {
+      display: inline-block;
+      background: oklch(0.08 0.01 270);
+      border-radius: 2px;
+    }
   </style>
 `
 
@@ -65,9 +88,75 @@ const panelCSS = `
 function searchPanelHTML(): string {
   return `${panelCSS}
   <div class="panel" style="align-items: center; text-align: center;">
+    <div class="stamp" style="margin-bottom: 24px;">Blindspot // Classified</div>
     <h1 class="serif" style="font-size: 42px; margin-bottom: 12px;">Blindspot</h1>
     <p class="muted" style="font-size: 16px; margin-bottom: 40px;">Privacy-preserving onchain investigation</p>
-    <p class="dim" style="font-size: 13px;">Enter an ENS name to begin</p>
+    <p class="dim mono" style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Enter an ENS name to declassify</p>
+  </div>`
+}
+
+// ── Redacted placeholder panels (shown on landing before investigation) ──
+function redactedIdentityHTML(): string {
+  return `${panelCSS}
+  <div class="panel">
+    <div class="label">Identity</div>
+    <h2 class="serif" style="font-size: 36px; margin-bottom: 8px;">████████████</h2>
+    <p class="mono muted" style="font-size: 13px; margin-bottom: 24px;">████████████████████████████████████████</p>
+    <div style="display: flex; gap: 20px; font-size: 14px;">
+      <div class="muted">████████████</div>
+      <div class="muted">██████████</div>
+    </div>
+  </div>`
+}
+
+function redactedOnchainHTML(): string {
+  return `${panelCSS}
+  <div class="panel">
+    <div class="label">Onchain Portfolio</div>
+    <div style="display: flex; gap: 48px; margin-bottom: 32px;">
+      <div>
+        <div class="serif" style="font-size: 48px;">██████</div>
+        <div class="muted" style="font-size: 13px; margin-top: 4px;">total value</div>
+      </div>
+      <div>
+        <div class="serif" style="font-size: 48px;">████</div>
+        <div class="muted" style="font-size: 13px; margin-top: 4px;">assets</div>
+      </div>
+      <div>
+        <div class="serif" style="font-size: 48px;">██████</div>
+        <div class="muted" style="font-size: 13px; margin-top: 4px;">realized PnL</div>
+      </div>
+    </div>
+    <div style="font-size: 14px;">
+      <div class="muted" style="margin-bottom: 6px;">████████████████████</div>
+      <div class="muted" style="margin-bottom: 6px;">██████████████████</div>
+      <div class="muted">████████████████</div>
+    </div>
+  </div>`
+}
+
+function redactedOffchainHTML(): string {
+  return `${panelCSS}
+  <div class="panel">
+    <div class="label">Off-chain Context</div>
+    <div style="margin-bottom: 24px;">
+      <div class="muted" style="font-size: 14px; margin-bottom: 8px;">████████████████████████████</div>
+      <div class="muted" style="font-size: 13px; margin-bottom: 20px;">████████████████████</div>
+      <div class="muted" style="font-size: 14px; margin-bottom: 8px;">████████████████████████████</div>
+      <div class="muted" style="font-size: 13px;">████████████████████</div>
+    </div>
+    <p class="mono dim" style="font-size: 11px;">fetched via ████████████ (██)</p>
+  </div>`
+}
+
+function redactedVerdictHTML(): string {
+  return `${panelCSS}
+  <div class="panel" style="align-items: center; text-align: center;">
+    <div class="label">Verdict</div>
+    <div class="serif" style="font-size: 96px; color: oklch(0.65 0.005 270); line-height: 1; margin: 16px 0 8px;">██</div>
+    <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; color: oklch(0.65 0.005 270); margin-bottom: 32px;">████████████</div>
+    <p class="muted" style="font-size: 14px; max-width: 320px; margin-bottom: 16px;">████████████████████████████████████████████████████████</p>
+    <p class="dim mono" style="font-size: 11px;">████████████████████████████████████████████</p>
   </div>`
 }
 
@@ -232,13 +321,74 @@ export interface PanelSystem {
   group: THREE.Group
   panels: PanelMesh[][]
   chart: DonutChart | null
+  redactions: RedactionGroup[]
   dispose: () => void
 }
 
+// Build redacted placeholder panels for the landing experience.
+// These are visible on page load, before any investigation starts.
+export async function buildRedactedPanels(): Promise<PanelSystem> {
+  const group = new THREE.Group()
+  const panels: PanelMesh[][] = []
+  const redactions: RedactionGroup[] = []
+
+  // Panel 0: Search (with classification stamp)
+  const p0 = await buildPlane(searchPanelHTML(), 6, 4, [0, 0, PANEL_Z[0]], "right")
+  group.add(p0.mesh)
+  panels.push([p0])
+  p0.reveal()
+
+  // Panel 1: Identity (redacted)
+  const p1 = await buildPlane(redactedIdentityHTML(), 6, 4, [2, 0, PANEL_Z[1]], "right")
+  group.add(p1.mesh)
+  panels.push([p1])
+  p1.reveal()
+  // Add redaction bars
+  const r1 = createRedactionGroup([2, 0, PANEL_Z[1]], REDACTION_LAYOUTS[1])
+  r1.bars.forEach((b) => group.add(b.mesh))
+  redactions.push(r1)
+
+  // Panel 2: Onchain (redacted)
+  const p2 = await buildPlane(redactedOnchainHTML(), 6, 4, [-2, 0, PANEL_Z[2]], "up")
+  group.add(p2.mesh)
+  panels.push([p2])
+  p2.reveal()
+  const r2 = createRedactionGroup([-2, 0, PANEL_Z[2]], REDACTION_LAYOUTS[2])
+  r2.bars.forEach((b) => group.add(b.mesh))
+  redactions.push(r2)
+
+  // Panel 3: Off-chain (redacted)
+  const p3 = await buildPlane(redactedOffchainHTML(), 6, 4, [2, 0, PANEL_Z[3]], "right")
+  group.add(p3.mesh)
+  panels.push([p3])
+  p3.reveal()
+  const r3 = createRedactionGroup([2, 0, PANEL_Z[3]], REDACTION_LAYOUTS[3])
+  r3.bars.forEach((b) => group.add(b.mesh))
+  redactions.push(r3)
+
+  // Panel 4: Verdict (redacted)
+  const p4 = await buildPlane(redactedVerdictHTML(), 6, 4, [0, 0, PANEL_Z[4]], "center")
+  group.add(p4.mesh)
+  panels.push([p4])
+  p4.reveal()
+  const r4 = createRedactionGroup([0, 0, PANEL_Z[4]], REDACTION_LAYOUTS[4])
+  r4.bars.forEach((b) => group.add(b.mesh))
+  redactions.push(r4)
+
+  function dispose() {
+    panels.forEach((pp) => pp.forEach((p) => p.dispose()))
+    redactions.forEach((r) => r.dispose())
+  }
+
+  return { group, panels, chart: null, redactions, dispose }
+}
+
+// Build panels with real investigation data (replaces redacted panels).
 export async function buildPanels(data: InvestigationData): Promise<PanelSystem> {
   const group = new THREE.Group()
   const panels: PanelMesh[][] = []
   let chart: DonutChart | null = null
+  const redactions: RedactionGroup[] = []
 
   // Panel 0: Search (static)
   const p0 = await buildPlane(searchPanelHTML(), 6, 4, [0, 0, PANEL_Z[0]], "right")
@@ -291,9 +441,10 @@ export async function buildPanels(data: InvestigationData): Promise<PanelSystem>
   function dispose() {
     panels.forEach((pp) => pp.forEach((p) => p.dispose()))
     chart?.dispose()
+    redactions.forEach((r) => r.dispose())
   }
 
-  return { group, panels, chart, dispose }
+  return { group, panels, chart, redactions, dispose }
 }
 
 function formatCompact(n: number): string {
