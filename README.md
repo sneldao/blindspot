@@ -33,6 +33,12 @@ past. Copy one into your project and change the parts you care about.
 | --- | --- | --- |
 | [desktop-computer-use-py](examples/desktop-computer-use-py) | Python | Screenshot, click, and type on a Linux GUI |
 
+### Multi-product
+
+| Example | Language | What it shows |
+| --- | --- | --- |
+| [blindspot-ts](examples/blindspot-ts) | TypeScript | Privacy-preserving onchain investigation: ephemeral sandbox + stealth browser + ENS + Mobula |
+
 ## Running an example
 
 Each directory is self-contained.

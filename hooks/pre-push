@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# pre-push — full-repo secrets scan before pushing
+#
+# pre-commit catches secrets in staged files. pre-push runs a full `gitleaks
+# detect` on the commit range being pushed as a second line of defense —
+# catches secrets that may have slipped in via `--no-verify` or amend.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "  pre-push: WARNING — gitleaks not installed, skipping secret scan." >&2
+  exit 0
+fi
+
+# Read the pre-push input: <local ref> <local sha> <remote ref> <remote sha>
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Skip branch deletions
+  if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    continue
+  fi
+
+  # Determine the commit range to scan
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    # New branch — scan all commits reachable from local_sha
+    range="$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  echo "  pre-push: scanning commits $range for secrets (gitleaks)..."
+
+  if ! gitleaks detect --source="$repo_root" \
+       --config="$repo_root/hooks/.gitleaks.toml" \
+       --redact \
+       --log-opts="$range" 2>/dev/null; then
+    echo "  pre-push: BLOCKED — gitleaks detected secrets in push range." >&2
+    echo "  pre-push: Review the findings above." >&2
+    echo "  pre-push: If this is a false positive, use --no-verify." >&2
+    exit 1
+  fi
+done
+
+echo "  pre-push: no secrets detected ✓"

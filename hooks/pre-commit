@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# pre-commit — secrets scan + linting for staged files
+#
+# Runs three checks on staged changes only:
+#   1. gitleaks  — scans staged content for leaked API keys, tokens, etc.
+#   2. ruff      — lints staged Python files
+#   3. tsc       — type-checks staged TypeScript files (per example tsconfig)
+#
+# Failures block the commit. Skip with `git commit --no-verify` (emergencies
+# only — you'd bypass the secret scan too).
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+staged_files="$(git diff --cached --name-only --diff-filter=ACM)"
+
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+# ── 1. Secrets scan (gitleaks) ──────────────────────────────────────────────
+# `protect --staged` scans only the staged hunks, not the whole repo.
+if command -v gitleaks >/dev/null 2>&1; then
+  echo "  pre-commit: scanning staged files for secrets (gitleaks)..."
+  if ! gitleaks protect --staged --redact --config="$repo_root/hooks/.gitleaks.toml" 2>/dev/null; then
+    echo "  pre-commit: BLOCKED — gitleaks detected secrets in staged changes." >&2
+    echo "  pre-commit: Review the findings above. If false positive, use --no-verify." >&2
+    exit 1
+  fi
+  echo "  pre-commit: no secrets detected ✓"
+else
+  echo "  pre-commit: WARNING — gitleaks not installed, skipping secret scan." >&2
+fi
+
+# ── 2. Python linting (ruff) ────────────────────────────────────────────────
+py_files="$(echo "$staged_files" | grep '\.py$' || true)"
+if [ -n "$py_files" ]; then
+  if command -v ruff >/dev/null 2>&1; then
+    echo "  pre-commit: linting Python files (ruff)..."
+    cd "$repo_root"
+    if ! ruff check --no-fix $py_files; then
+      echo "  pre-commit: BLOCKED — ruff found lint errors." >&2
+      echo "  pre-commit: Fix with: ruff check --fix <files>" >&2
+      exit 1
+    fi
+    echo "  pre-commit: Python lint clean ✓"
+  else
+    echo "  pre-commit: WARNING — ruff not installed, skipping Python lint." >&2
+  fi
+fi
+
+# ── 3. TypeScript type-checking (tsc) ───────────────────────────────────────
+# Run tsc --noEmit for each example that has a tsconfig.json AND has staged .ts
+# files. We check per-example so a missing dep install in one doesn't block
+# the others.
+ts_files="$(echo "$staged_files" | grep '\.ts$' || true)"
+if [ -n "$ts_files" ]; then
+  echo "  pre-commit: type-checking TypeScript files (tsc)..."
+  cd "$repo_root"
+
+  # Find example dirs with tsconfig.json that have staged .ts files
+  ts_dirs="$(echo "$ts_files" | xargs -n1 dirname | sort -u)"
+  for dir in $ts_dirs; do
+    # Walk up to find the example root (the dir with tsconfig.json)
+    check_dir="$dir"
+    while [ "$check_dir" != "." ] && [ "$check_dir" != "/" ]; do
+      if [ -f "$check_dir/tsconfig.json" ]; then
+        if [ -d "$check_dir/node_modules" ]; then
+          echo "  pre-commit:   tsc --noEmit in $check_dir..."
+          if ! (cd "$check_dir" && npx tsc --noEmit 2>&1); then
+            echo "  pre-commit: BLOCKED — TypeScript errors in $check_dir." >&2
+            exit 1
+          fi
+        else
+          echo "  pre-commit:   skipping $check_dir (no node_modules — run npm install first)"
+        fi
+        break
+      fi
+      check_dir="$(dirname "$check_dir")"
+    done
+  done
+  echo "  pre-commit: TypeScript type-check clean ✓"
+fi
+
+echo "  pre-commit: all checks passed ✓"

@@ -1,0 +1,42 @@
+# gitleaks configuration — extends the default rules with project-specific
+# patterns for the API keys used in this cookbook.
+#
+# The default ruleset (built into gitleaks) already covers AWS, GCP, Stripe,
+# GitHub tokens, private keys, etc. This file adds:
+#   - Solari API keys (slr_live_...)
+#   - Mobula API keys
+#   - Ethereum private keys (0x-prefixed 64 hex chars)
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "solari-api-key"
+description = "Solari API key"
+regex = '''slr_live_[a-zA-Z0-9_]{20,}'''
+tags = ["key", "solari"]
+
+[[rules]]
+id = "ethereum-private-key"
+description = "Ethereum private key (64 hex chars)"
+regex = '''(?i)0x[a-f0-9]{64}'''
+tags = ["key", "ethereum", "wallet"]
+
+[[rules]]
+id = "mobula-api-key"
+description = "Mobula API key in env assignment"
+regex = '''(?i)MOBULA_API_KEY\s*=\s*["']?[a-zA-Z0-9_-]{20,}["']?'''
+tags = ["key", "mobula"]
+
+# Allow .env.example files — they contain placeholder values by design
+[[allowlists]]
+description = "Allow .env.example files (placeholders, not real secrets)"
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.sample$''',
+]
+
+# Allow the gitleaks config itself (contains regex patterns, not real keys)
+[[allowlists]]
+description = "Allow gitleaks config"
+paths = ['''\.gitleaks\.toml$''']
