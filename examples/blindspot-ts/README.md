@@ -82,11 +82,62 @@ cd examples/blindspot-ts
 npm install
 export SOLARI_API_KEY=slr_live_...   # console.getsolari.com
 export MOBULA_API_KEY=...             # admin.mobula.io
-npm start -- vitalik.eth
+
+# Web UI (3D dossier experience)
+npm run dev
+# → http://localhost:4567
+
+# CLI mode (terminal output + report file)
+npm run cli -- vitalik.eth
 ```
 
-The report opens in your browser automatically. A session recording (rrweb
-NDJSON) is downloaded for demo purposes.
+The web UI is a 3D scroll-driven dossier built with Three.js. Each panel is a
+classified document that declassifies as you approach — ink dissolves in
+patches to reveal the investigation data underneath.
+
+## Tech stack
+
+- **Astro + React** — app shell, routing, server endpoints (SSE, report serving)
+- **Three.js** — 3D dossier experience (custom shaders, proximity-driven declassification)
+- **Lenis** — smooth scroll
+- **Solari** (`@solarisdk/browser`, `@solarisdk/sdk`) — ephemeral sandboxes + stealth browsers
+- **Ethers.js** — ENS resolution and text record fetching
+- **Mobula API** — onchain portfolio, positions, and PnL data
+
+### Project structure
+
+```
+src/
+  pages/          Astro pages + API endpoints
+    index.astro   Main page (renders the React island)
+    api/
+      investigate.ts  SSE endpoint for investigation events
+      report.ts       Report file serving
+  layouts/        Astro layout (HTML shell, fonts, global CSS)
+  components/      React islands
+    BlindspotApp.tsx  Main island (state + Three.js canvas + DOM overlays)
+  client/         Three.js engine (vanilla TS, imported by React island)
+    scene.ts          Renderer, camera, lights, fog
+    panels.ts         Declassification dossier panels
+    redaction-material.ts  Ink dissolution shader (the core UI primitive)
+    paper-texture.ts  Procedural paper texture generator
+    camera-curve.ts   Scroll-driven camera path
+    scroll.ts         Lenis smooth scroll
+    chart.ts          3D donut chart
+    texture.ts        HTML-to-texture pipeline
+  lib/            Server-side investigation modules
+    orchestrator.ts   Full pipeline coordinator
+    ens.ts            ENS resolution
+    mobula.ts         Onchain data (via sandbox)
+    sandbox.ts        Solari sandbox management
+    browser.ts        Solari stealth browser
+    analyzer.ts       Risk scoring
+    report.ts         HTML report generation
+    types.ts          Shared types
+    events.ts         SSE event types
+  server/         CLI entry point
+    cli.ts
+```
 
 ## Solari gotchas this project handles
 
@@ -110,11 +161,5 @@ NDJSON) is downloaded for demo purposes.
   metadata.
 - **ZK proof of authorization**: The investigator proves they're authorized to
   use the service without revealing who they are.
-
-## Tech stack
-
-- Solari (`@solarisdk/browser`, `@solarisdk/sdk`) — ephemeral sandboxes + stealth browsers
-- Ethers.js — ENS resolution and text record fetching
-- Mobula API — onchain portfolio, positions, and PnL data
 
 MIT licensed.

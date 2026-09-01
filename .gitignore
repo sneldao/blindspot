@@ -7,3 +7,5 @@ __pycache__/
 venv/
 screenshot.png
 reports/
+.astro/
+dist/

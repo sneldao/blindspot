@@ -1,0 +1,8 @@
+---
+import Layout from "../layouts/Layout.astro"
+import BlindspotApp from "../components/BlindspotApp.tsx"
+---
+
+<Layout title="Blindspot">
+  <BlindspotApp client:only="react" />
+</Layout>

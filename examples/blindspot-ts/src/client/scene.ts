@@ -1,5 +1,7 @@
 // 3D scene setup — renderer, camera, lights, fog, background.
-// All the static scene infrastructure that doesn't change per-investigation.
+// The space is a dim archive — panels glow like lit documents in low light.
+// The declassification primitive needs darkness to read: ink dissolving
+// into warm glow only works against a dark background.
 
 import * as THREE from "three"
 
@@ -21,15 +23,17 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   renderer.setSize(window.innerWidth, window.innerHeight)
   renderer.shadowMap.enabled = true
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
+  renderer.toneMapping = THREE.ACESFilmicToneMapping
+  renderer.toneMappingExposure = 1.0
 
-  // Paper-warm background
-  const paperColor = new THREE.Color("oklch(0.98 0.005 85)")
-  renderer.setClearColor(paperColor)
+  // Deep warm dark — the archive room at night
+  const bgColor = new THREE.Color("oklch(0.10 0.008 60)")
+  renderer.setClearColor(bgColor)
 
   const scene = new THREE.Scene()
-  scene.background = paperColor
-  // Fog: paper-warm, near 8, far 25 — distant panels dissolve into paper
-  scene.fog = new THREE.Fog(new THREE.Color("oklch(0.94 0.008 80)"), 8, 25)
+  scene.background = bgColor
+  // Warm fog — distant panels emerge from amber darkness
+  scene.fog = new THREE.Fog(new THREE.Color("oklch(0.12 0.01 55)"), 8, 30)
 
   const camera = new THREE.PerspectiveCamera(
     50,
@@ -39,11 +43,13 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   )
   camera.position.set(0, 0, 5)
 
-  // Lights
-  const ambient = new THREE.AmbientLight(0xfff5e6, 0.6)
+  // ── Lights ──
+  // Low ambient — the room is dim, panels provide their own light
+  const ambient = new THREE.AmbientLight(0xfff5e6, 0.2)
   scene.add(ambient)
 
-  const directional = new THREE.DirectionalLight(0xffffff, 0.8)
+  // Warm key light from above — like a single overhead lamp
+  const directional = new THREE.DirectionalLight(0xffd9a0, 0.5)
   directional.position.set(-5, 8, 5)
   directional.castShadow = true
   directional.shadow.mapSize.width = 2048
@@ -58,18 +64,10 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   scene.add(directional)
 
   // Accent point light — terracotta tint, follows camera for warmth
-  const pointLight = new THREE.PointLight(0xd4663a, 0.3, 15)
+  // This is the light that "illuminates" the document you're reading
+  const pointLight = new THREE.PointLight(0xd4663a, 1.2, 15)
   pointLight.position.copy(camera.position)
   scene.add(pointLight)
-
-  // Invisible floor plane to catch shadows — grounds the floating panels
-  const floorGeo = new THREE.PlaneGeometry(200, 200)
-  const floorMat = new THREE.ShadowMaterial({ opacity: 0.15 })
-  const floor = new THREE.Mesh(floorGeo, floorMat)
-  floor.rotation.x = -Math.PI / 2
-  floor.position.y = -5
-  floor.receiveShadow = true
-  scene.add(floor)
 
   // Handle resize
   function onResize() {
@@ -82,8 +80,6 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   function dispose() {
     window.removeEventListener("resize", onResize)
     renderer.dispose()
-    floorGeo.dispose()
-    floorMat.dispose()
   }
 
   return { renderer, scene, camera, pointLight, dispose }
