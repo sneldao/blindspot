@@ -6,6 +6,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   site: "https://scudra.dev",
+  // Astro 7's Rust compiler no longer compresses whitespace between inline
+  // elements. Opt into the old behavior so the type-driven nav/footer and
+  // label spacing keep their v5 rendering.
+  compressHTML: true,
   server: {
     port: 4321,
   },
