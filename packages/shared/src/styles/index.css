@@ -1,0 +1,49 @@
+/* Scudra design tokens — warm, editorial, paper-and-ink */
+:root {
+  --sc-paper: #faf8f3;
+  --sc-paper-warm: #f5f1e8;
+  --sc-ink: #1a1a1a;
+  --sc-ink-muted: #6b6b6b;
+  --sc-ink-dim: #9e9e9e;
+  --sc-accent: #c45f34;
+  --sc-accent-soft: rgba(196, 95, 52, 0.08);
+  --sc-risk-low: #2a9d52;
+  --sc-risk-moderate: #d89722;
+  --sc-risk-high: #c45f34;
+
+  --sc-font-sans: "Inter", -apple-system, system-ui, sans-serif;
+  --sc-font-serif: "Fraunces", Georgia, serif;
+  --sc-font-mono: "JetBrains Mono", monospace;
+
+  --sc-radius: 8px;
+  --sc-max-width: 1120px;
+}
+
+html {
+  background: var(--sc-paper);
+  color: var(--sc-ink);
+  font-family: var(--sc-font-sans);
+  letter-spacing: -0.01em;
+}
+
+.sc-surface {
+  background: var(--sc-paper);
+  color: var(--sc-ink);
+}
+
+.sc-container {
+  max-width: var(--sc-max-width);
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+
+.sc-link {
+  color: var(--sc-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(196, 95, 52, 0.3);
+}
+
+.sc-link:hover {
+  text-decoration-color: var(--sc-accent);
+}

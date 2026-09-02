@@ -1,0 +1,22 @@
+{
+  "name": "scudra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scudra — a lab for cloud-native agents. Recipes, experiences, and thought leadership for browsers, sandboxes, and desktops that run in the cloud.",
+  "license": "MIT",
+  "author": "Scudra Contributors",
+  "type": "module",
+  "scripts": {
+    "dev:site": "pnpm --filter site dev",
+    "dev:blindspot": "pnpm --filter blindspot dev",
+    "build:site": "pnpm --filter site build",
+    "build:blindspot": "pnpm --filter blindspot build",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "echo 'lint not configured yet'"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

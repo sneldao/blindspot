@@ -1,0 +1,64 @@
+---
+import Layout from "../layouts/Layout.astro"
+---
+
+<Layout>
+  <section style="padding-block: 6rem 4rem;">
+    <div class="sc-container">
+      <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+        A lab for cloud-native agents
+      </p>
+      <h1 style="font-family: var(--sc-font-serif); font-size: clamp(3rem, 8vw, 5rem); line-height: 1.05; letter-spacing: -0.03em; max-width: 16ch;">
+        Software that runs, acts, and disappears in the cloud.
+      </h1>
+      <p style="font-size: 1.125rem; color: var(--sc-ink-muted); max-width: 55ch; margin-top: 1.5rem; line-height: 1.6;">
+        Scudra is a collection of real-world recipes and experiences for cloud agents: ephemeral browsers, sandboxes, and desktops that do work on your behalf and leave no trace.
+      </p>
+      <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+        <a href="/recipes" style="display: inline-block; padding: 0.75rem 1.25rem; background: var(--sc-ink); color: var(--sc-paper); border-radius: var(--sc-radius); text-decoration: none; font-weight: 500;">
+          Browse recipes
+        </a>
+        <a href="/experiences" style="display: inline-block; padding: 0.75rem 1.25rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);">
+          Explore experiences
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-block: 4rem; background: var(--sc-paper-warm);">
+    <div class="sc-container">
+      <h2 style="font-family: var(--sc-font-serif); font-size: 2rem; margin-bottom: 2rem;">Three primitives</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+        <article style="padding: 1.5rem; background: var(--sc-paper); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
+          <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Browser</h3>
+          <p style="color: var(--sc-ink-muted); line-height: 1.5;">A web agent that can see, click, and navigate without ever touching your local machine.</p>
+        </article>
+        <article style="padding: 1.5rem; background: var(--sc-paper); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
+          <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Sandbox</h3>
+          <p style="color: var(--sc-ink-muted); line-height: 1.5;">A disposable VM that boots in seconds, runs code, and is destroyed when the work is done.</p>
+        </article>
+        <article style="padding: 1.5rem; background: var(--sc-paper); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
+          <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Desktop</h3>
+          <p style="color: var(--sc-ink-muted); line-height: 1.5;">A remote GUI for tasks that need a screen: click, type, and observe like a human operator.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-block: 5rem;">
+    <div class="sc-container">
+      <h2 style="font-family: var(--sc-font-serif); font-size: 2rem; margin-bottom: 1rem;">Featured experience</h2>
+      <p style="color: var(--sc-ink-muted); max-width: 60ch; margin-bottom: 2rem;">
+        Blindspot is a privacy-preserving onchain investigation agent. It resolves an ENS name, runs Mobula inside a Solari sandbox, enriches off-chain context through a stealth browser, and delivers a verdict you can take with you.
+      </p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="/experiences#blindspot" style="display: inline-block; padding: 0.75rem 1.25rem; background: var(--sc-accent); color: white; border-radius: var(--sc-radius); text-decoration: none; font-weight: 500;">
+          Open the dossier
+        </a>
+        <a href="/recipes/blindspot" style="display: inline-block; padding: 0.75rem 1.25rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);">
+          Read the recipe
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

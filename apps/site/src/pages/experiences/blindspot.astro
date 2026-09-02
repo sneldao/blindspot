@@ -1,0 +1,46 @@
+---
+import Layout from "../../layouts/Layout.astro"
+---
+
+<Layout
+  title="Blindspot — Scudra"
+  description="A privacy-preserving onchain investigation agent built with cloud browsers and sandboxes."
+>
+  <article class="sc-container" style="padding-block: 5rem; max-width: 72ch;">
+    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+      <a href="/experiences" style="text-decoration: none; color: inherit;">← Experiences</a>
+    </p>
+
+    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem;">
+      Blindspot
+    </h1>
+    <p style="font-size: 1.125rem; color: var(--sc-ink-muted); line-height: 1.6; margin-bottom: 2rem;">
+      A privacy-preserving onchain investigation agent. Resolve an ENS name, run Mobula inside an ephemeral sandbox, enrich off-chain context through a stealth browser, and receive a verdict.
+    </p>
+
+    <div style="display: flex; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap;">
+      <a
+        href="https://github.com/scudra/scudra/tree/main/apps/blindspot"
+        style="display: inline-block; padding: 0.75rem 1.25rem; background: var(--sc-ink); color: var(--sc-paper); border-radius: var(--sc-radius); text-decoration: none; font-weight: 500;"
+      >
+        Run it locally
+      </a>
+      <a
+        href="/recipes/blindspot"
+        style="display: inline-block; padding: 0.75rem 1.25rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);"
+      >
+        Read the recipe
+      </a>
+    </div>
+
+    <div style="padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
+      <h2 style="font-family: var(--sc-font-serif); font-size: 1.35rem; margin-bottom: 1rem;">What it demonstrates</h2>
+      <ul style="display: flex; flex-direction: column; gap: 0.75rem; color: var(--sc-ink-muted); line-height: 1.6; padding-left: 1.25rem;">
+        <li><strong>Ephemeral sandbox.</strong> Mobula API calls run inside a Solari sandbox, so the investigator's IP never touches the data provider.</li>
+        <li><strong>Stealth browser.</strong> Off-chain enrichment is fetched through a residential proxy, masking the investigator's fingerprint.</li>
+        <li><strong>Session recording.</strong> The full browser session can be recorded and downloaded for audit.</li>
+        <li><strong>Teardown.</strong> Sandbox is killed, browser is closed, and state is removed after the investigation.</li>
+      </ul>
+    </div>
+  </article>
+</Layout>

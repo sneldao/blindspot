@@ -1,0 +1,20 @@
+---
+import { SITE, NAV } from "../index.js"
+---
+
+<header class="sc-surface">
+  <nav class="sc-container" style="display: flex; align-items: center; justify-content: space-between; padding-block: 1.25rem;">
+    <a href="/" style="font-family: var(--sc-font-serif); font-size: 1.5rem; text-decoration: none; color: var(--sc-ink);">
+      {SITE.name}
+    </a>
+    <ul style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; font-size: 0.875rem;">
+      {NAV.map((item) => (
+        <li>
+          <a href={item.href} style="text-decoration: none; color: var(--sc-ink-muted);">
+            {item.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>

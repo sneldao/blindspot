@@ -1,0 +1,46 @@
+---
+import Layout from "../../layouts/Layout.astro"
+---
+
+<Layout title="Experiences — Scudra" description="Interactive cloud agent experiences built by Scudra.">
+  <section class="sc-container" style="padding-block: 5rem;">
+    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+      Experiences
+    </p>
+    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem;">
+      Interactive experiences
+    </h1>
+    <p style="color: var(--sc-ink-muted); max-width: 55ch; margin-bottom: 3rem; line-height: 1.6;">
+      These are not static demos. They are real agents you can run, inspect, and fork.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
+      <article id="blindspot" style="padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
+        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sc-ink-muted); margin-bottom: 0.75rem;">Live</p>
+        <h2 style="font-family: var(--sc-font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">Blindspot</h2>
+        <p style="color: var(--sc-ink-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+          A privacy-preserving onchain investigation agent. Search an ENS name and watch the dossier declassify as the agent works.
+        </p>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <a href="/experiences/blindspot" style="display: inline-block; padding: 0.6rem 1rem; background: var(--sc-accent); color: white; border-radius: var(--sc-radius); text-decoration: none; font-weight: 500;">
+            Open dossier
+          </a>
+          <a href="/recipes/blindspot" style="display: inline-block; padding: 0.6rem 1rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);">
+            Read recipe
+          </a>
+        </div>
+      </article>
+
+      <article style="padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06); opacity: 0.65;">
+        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sc-ink-muted); margin-bottom: 0.75rem;">Coming soon</p>
+        <h2 style="font-family: var(--sc-font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">Stealth Scraper</h2>
+        <p style="color: var(--sc-ink-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+          A distributed witness that captures web pages from multiple egress points and compares what each location sees.
+        </p>
+        <span style="display: inline-block; padding: 0.6rem 1rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); color: var(--sc-ink-dim);">
+          In the lab
+        </span>
+      </article>
+    </div>
+  </section>
+</Layout>

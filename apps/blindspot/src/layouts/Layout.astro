@@ -1,0 +1,78 @@
+---
+import "@fontsource/fraunces/400.css"
+import "@fontsource/inter/400.css"
+import "@fontsource/inter/500.css"
+import "@fontsource/inter/600.css"
+import "@fontsource/jetbrains-mono/400.css"
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const {
+  title = "Blindspot",
+  description = "Privacy-preserving onchain investigation. Open a dossier, see everything, leave no trace.",
+} = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <style is:global>
+      :root {
+        --paper: oklch(0.96 0.008 80);
+        --ink: oklch(0.15 0.01 270);
+        --ink-muted: oklch(0.45 0.01 270);
+        --ink-dim: oklch(0.65 0.005 270);
+        --accent: oklch(0.62 0.14 40);
+        --bg: oklch(0.98 0.005 85);
+        --bg-warm: oklch(0.94 0.008 80);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", -apple-system, system-ui, sans-serif;
+        letter-spacing: -0.01em;
+        overflow-x: hidden;
+      }
+
+      /* Visible focus for keyboard users — terracotta ring, per DESIGN.md */
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

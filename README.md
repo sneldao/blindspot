@@ -1,97 +1,76 @@
-# Solari Cookbook
+# Scudra
 
-Short, runnable examples for [Solari](https://getsolari.com) — cloud browsers,
-sandboxes, and desktops behind one API key.
+A lab for cloud-native agents.
 
-Every example in this repo is a complete program you can run in under a minute.
-They are deliberately small: one idea each, no framework, no scaffolding to read
-past. Copy one into your project and change the parts you care about.
+**Scudra** is a collection of real-world recipes, experiences, and thought leadership for browsers, sandboxes, and desktops that run in the cloud.
 
-## Examples
+It is built on [Solari](https://getsolari.com), the platform that unifies cloud browsers, sandboxes, and desktops behind one API.
 
-### Cloud browser
+## Why cloud agents?
 
-| Example | Language | What it shows |
-| --- | --- | --- |
-| [browser-quickstart-ts](examples/browser-quickstart-ts) | TypeScript | Launch a browser, open a page, read it |
-| [browser-quickstart-py](examples/browser-quickstart-py) | Python | Launch a browser, open a page, read it |
-| [browser-stealth-proxy-ts](examples/browser-stealth-proxy-ts) | TypeScript | Stealth mode + residential proxy egress |
-| [browser-profiles-ts](examples/browser-profiles-ts) | TypeScript | Log in once, reuse the session forever |
-| [browser-session-recording-py](examples/browser-session-recording-py) | Python | Record a session, download the replay |
+The next shift in software is not bigger models. It is smaller, cloud-native agents.
 
-### Sandbox
+A cloud agent is a program whose body is infrastructure: a browser in Frankfurt, a sandbox in Iowa, a desktop in Singapore. It starts with an API call and leaves no persistent state behind. This makes it the right shape for competitive research, sensitive automation, and any task where the operator's identity, location, or history must not leak.
 
-| Example | Language | What it shows |
-| --- | --- | --- |
-| [sandbox-quickstart-ts](examples/sandbox-quickstart-ts) | TypeScript | Run a command, write and read files |
-| [sandbox-code-interpreter-py](examples/sandbox-code-interpreter-py) | Python | Stateful Python kernel for agent loops |
-| [sandbox-port-preview-ts](examples/sandbox-port-preview-ts) | TypeScript | Expose a server in the VM on a public URL |
+## The three primitives
 
-### Desktop
+- **Browser** — A web agent that can see, click, and navigate without touching your local machine.
+- **Sandbox** — A disposable VM that boots in seconds, runs code, and is destroyed when the work is done.
+- **Desktop** — A remote GUI for tasks that require a screen: click, type, and observe like a human.
 
-| Example | Language | What it shows |
-| --- | --- | --- |
-| [desktop-computer-use-py](examples/desktop-computer-use-py) | Python | Screenshot, click, and type on a Linux GUI |
+## Featured experience
 
-### Multi-product
+- **[Blindspot](apps/blindspot)** — Privacy-preserving onchain investigation. Resolve an ENS name, run Mobula inside an ephemeral sandbox, enrich off-chain context through a stealth browser, and receive a verdict.
 
-| Example | Language | What it shows |
-| --- | --- | --- |
-| [blindspot-ts](examples/blindspot-ts) | TypeScript | Privacy-preserving onchain investigation: ephemeral sandbox + stealth browser + ENS + Mobula |
+## Repository structure
 
-## Running an example
-
-Each directory is self-contained.
-
-```bash
-git clone https://github.com/solari-sdk/solari-cookbook.git
-cd solari-cookbook/examples/browser-quickstart-ts
-
-npm install                          # or: pip install -r requirements.txt
-export SOLARI_API_KEY=slr_live_...   # grab one at console.getsolari.com
-npm start                            # or: python main.py
+```
+scudra/
+├── apps/
+│   ├── site/        # Main site: manifesto, recipes, experiences
+│   └── blindspot/   # Flagship interactive experience
+├── packages/
+│   └── shared/      # Design tokens and shared UI
+├── content/         # Long-form writing and recipe source material
+└── examples/        # Original Solari cookbook examples
 ```
 
-One `slr_live_` key works across browsers, sandboxes, and desktops, and every
-product bills to the same balance.
+## Quick start
 
-## Which product do I want?
+```bash
+# Install dependencies
+pnpm install
 
-- **Cloud browser** — you need a *web page*: scraping, testing, filling forms,
-  anything Playwright or Puppeteer would do locally. Adds stealth, managed
-  proxies, captcha solving, profiles, and session recording.
-- **Sandbox** — you need to *run code*: an LLM's Python, an untrusted build, a
-  data job. A headless microVM that boots from a snapshot in about a second.
-- **Desktop** — you need a *screen*: computer-use agents, GUI apps, anything
-  that has to be clicked. A sandbox plus X11 and a live VNC stream.
+# Start the main site
+pnpm dev:site
 
-## Gotchas the examples encode
+# In another terminal, start the Blindspot experience
+pnpm dev:blindspot
+```
 
-Things that cost you an afternoon if you meet them cold:
+## The Cloud Agent Manifesto
 
-- **TypeScript: call `await solari.close()`.** The browser client keeps a
-  loopback proxy open for connection retries. Skip the close and your script
-  prints its output and then hangs forever instead of exiting.
-- **Recording is per session, not per account.** Pass `recording: true` when you
-  create the session; without it the replay endpoint 404s forever. The upload is
-  async after release, so poll for ~30s before giving up.
-- **Sandbox commands are not shell-interpreted.** `run("ls -la")` looks for a
-  binary named `ls -la`. Put argv in `args`, or run `sh -c` explicitly.
-- **`kill()`, not `close()`, ends a VM.** `close()` drops your local control
-  channel; the VM keeps running until its idle timeout.
-- **`timeoutMs` is a rolling idle window**, not a hard deadline — it resets on
-  every use.
+Read the full manifesto in [`content/manifesto.md`](content/manifesto.md) or at `/manifesto` once the site is running.
+
+## Recipes
+
+Each recipe is a real, runnable agent:
+
+- [Blindspot — The Investigator](content/recipes/blindspot.md)
+- [Stealth Scraper — The Witness](content/recipes/stealth-scraper.md)
+- [Code Interpreter — The Analyst](content/recipes/code-interpreter.md)
+- [Desktop Operator — The Controller](content/recipes/desktop-operator.md)
+
+## Built for
+
+Scudra is an exploration of what cloud agents can do. It was built as a response to the Pinetree Research / Solari engineering challenge: fork the Solari cookbook, build a real use case, and publish it.
+
+Use AI to build it? We did. The whole thing is public.
 
 ## Links
 
-- Docs — [docs.getsolari.com](https://docs.getsolari.com)
-- Console — [console.getsolari.com](https://console.getsolari.com)
-- Changelog — [changelog.getsolari.com](https://changelog.getsolari.com)
-- Questions — [hello@getsolari.com](mailto:hello@getsolari.com)
-
-## Contributing
-
-New examples are welcome. Keep them small, make them run end-to-end against the
-real API, and put anything surprising in a comment right where it bites.
+- Site — https://scudra.dev
+- Solari — https://getsolari.com
+- Solari Docs — https://docs.getsolari.com
 
 MIT licensed.
