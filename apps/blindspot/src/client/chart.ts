@@ -25,13 +25,7 @@ export interface DonutChart {
 }
 
 export function createDonutChart(opts: DonutChartOptions): DonutChart {
-  const {
-    segments,
-    innerRadius = 1.2,
-    outerRadius = 2.5,
-    depth = 0.3,
-    position = [0, 0, 0],
-  } = opts
+  const { segments, innerRadius = 1.2, outerRadius = 2.5, depth = 0.3, position = [0, 0, 0] } = opts
 
   const group = new THREE.Group()
   group.position.set(...position)

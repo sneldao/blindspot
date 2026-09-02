@@ -38,12 +38,7 @@ export function createScene(canvas: HTMLCanvasElement): SceneContext {
   // Warm fog — distant panels dissolve into paper, current panel stays crisp
   scene.fog = new THREE.Fog(new THREE.Color(TOKENS.fog), 8, 30)
 
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    100,
-  )
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100)
   camera.position.set(0, 0, 5)
 
   // ── Lights ──

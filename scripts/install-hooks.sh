@@ -5,8 +5,16 @@
 #   bash scripts/install-hooks.sh
 #
 # Re-run if hooks are updated. Safe to run multiple times.
+#
+# Wired into the root package.json `prepare` script, so `pnpm install` sets
+# hooks up automatically. Exits 0 outside a git repo (e.g. CI exports).
 
 set -euo pipefail
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "install-hooks: not a git repository — skipping hook install"
+  exit 0
+fi
 
 repo_root="$(git rev-parse --show-toplevel)"
 hooks_dir="$repo_root/hooks"

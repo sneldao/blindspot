@@ -19,6 +19,7 @@ import { createContentMaterial, createRedactionMaterial } from "./redaction-mate
 import { createDonutChart, type DonutChart, type ChartSegment } from "./chart.js"
 import { PANEL_Z } from "./camera-curve.js"
 import { TOKENS } from "./tokens.js"
+import { formatCompact } from "../lib/format.js"
 
 export interface PanelMesh {
   mesh: THREE.Mesh
@@ -116,13 +117,19 @@ function twitterHandle(data: InvestigationData): string | null {
 
 // ── Panel 2: Onchain ──
 function onchainPanelHTML(data: InvestigationData): string {
-  const holdingsRows = data.topHoldings
-    .slice(0, 5)
-    .map(
-      (h) =>
-        `<tr><td class="mono" style="padding: 4px 0;">${h.symbol}</td><td style="text-align: right; padding: 4px 0;">$${formatCompact(h.value)}</td><td class="muted" style="text-align: right; padding: 4px 0 4px 16px;">${h.percentage.toFixed(1)}%</td></tr>`,
-    )
-    .join("")
+  const holdingsTable =
+    data.topHoldings.length > 0
+      ? `<table style="font-size: 14px; border-collapse: collapse; width: 280px;">
+      <thead><tr><td class="label" style="padding-bottom: 8px;">Token</td><td class="label" style="text-align: right; padding-bottom: 8px;">Value</td><td class="label" style="text-align: right; padding-bottom: 8px; padding-left: 16px;">%</td></tr></thead>
+      <tbody>${data.topHoldings
+        .slice(0, 5)
+        .map(
+          (h) =>
+            `<tr><td class="mono" style="padding: 4px 0;">${h.symbol}</td><td style="text-align: right; padding: 4px 0;">$${formatCompact(h.value)}</td><td class="muted" style="text-align: right; padding: 4px 0 4px 16px;">${h.percentage.toFixed(1)}%</td></tr>`,
+        )
+        .join("")}</tbody>
+    </table>`
+      : `<p class="muted" style="font-size: 14px;">No holdings found.</p>`
 
   return `${panelCSS}
   <div class="panel">
@@ -141,10 +148,7 @@ function onchainPanelHTML(data: InvestigationData): string {
         <div class="muted" style="font-size: 13px; margin-top: 4px;">realized PnL</div>
       </div>
     </div>
-    <table style="font-size: 14px; border-collapse: collapse; width: 280px;">
-      <thead><tr><td class="label" style="padding-bottom: 8px;">Token</td><td class="label" style="text-align: right; padding-bottom: 8px;">Value</td><td class="label" style="text-align: right; padding-bottom: 8px; padding-left: 16px;">%</td></tr></thead>
-      <tbody>${holdingsRows}</tbody>
-    </table>
+    ${holdingsTable}
   </div>`
 }
 
@@ -164,7 +168,7 @@ function offchainPanelHTML(data: InvestigationData): string {
   return `${panelCSS}
   <div class="panel">
     <div class="label">Off-chain Context</div>
-    <div style="margin-bottom: 24px;">${sources}</div>
+    <div style="margin-bottom: 24px;">${sources || `<p class="muted" style="font-size: 14px;">No off-chain sources could be fetched.</p>`}</div>
     <p class="mono muted" style="font-size: 11px;">fetched via ${data.egressIp} (${data.proxyCountry.toUpperCase()})</p>
   </div>`
 }
@@ -172,11 +176,7 @@ function offchainPanelHTML(data: InvestigationData): string {
 // ── Panel 4: Verdict ──
 function verdictPanelHTML(data: InvestigationData): string {
   const riskColor =
-    data.riskScore >= 60
-      ? "oklch(0.58 0.20 25)"
-      : data.riskScore >= 30
-        ? "oklch(0.68 0.14 75)"
-        : "oklch(0.55 0.13 145)"
+    data.riskScore >= 60 ? "oklch(0.58 0.20 25)" : data.riskScore >= 30 ? "oklch(0.68 0.14 75)" : "oklch(0.55 0.13 145)"
 
   return `${panelCSS}
   <div class="panel" style="align-items: center; text-align: center;">
@@ -436,12 +436,4 @@ export async function buildPanels(data: InvestigationData): Promise<PanelSystem>
   }
 
   return { group, panels, chart, dispose }
-}
-
-function formatCompact(n: number): string {
-  const abs = Math.abs(n)
-  const trim = (s: string) => s.replace(/\.0$/, "")
-  if (abs >= 1e6) return trim((n / 1e6).toFixed(1)) + "M"
-  if (abs >= 1e3) return trim((n / 1e3).toFixed(1)) + "K"
-  return n.toFixed(0)
 }

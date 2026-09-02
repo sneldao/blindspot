@@ -38,7 +38,7 @@ scudra/
 ## Quick start
 
 ```bash
-# Install dependencies
+# Install dependencies (also installs git hooks via the prepare script)
 pnpm install
 
 # Start the main site
@@ -47,6 +47,19 @@ pnpm dev:site
 # In another terminal, start the Blindspot experience
 pnpm dev:blindspot
 ```
+
+## Development
+
+```bash
+pnpm typecheck      # TypeScript across all packages
+pnpm lint           # ESLint (TypeScript + React hooks rules)
+pnpm test           # Unit tests (Vitest)
+pnpm format         # Prettier across the repo
+```
+
+Git hooks (gitleaks secret scan, ruff, tsc) are symlinked by
+`scripts/install-hooks.sh`, which runs automatically on `pnpm install`.
+Run it manually if the hooks change: `bash scripts/install-hooks.sh`.
 
 ## The Cloud Agent Manifesto
 

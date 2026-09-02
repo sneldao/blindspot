@@ -2,6 +2,7 @@
   "name": "@scudra/shared",
   "version": "0.1.0",
   "private": true,
+  "description": "Shared design tokens, styles, and UI components for the Scudra site.",
   "type": "module",
   "main": "./src/index.ts",
   "exports": {

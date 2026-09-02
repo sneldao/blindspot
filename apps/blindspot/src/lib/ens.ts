@@ -15,6 +15,21 @@ import type { EnsRecord } from "./types.js"
 
 const RPC_URL = process.env.ETHEREUM_RPC_URL || "https://ethereum-rpc.publicnode.com"
 
+// Cheap pre-flight validation before an RPC round-trip. ENS names are
+// unicode (labels can hold emoji), so this is deliberately permissive — it
+// rejects control characters, whitespace, and structurally impossible names,
+// not unusual scripts.
+export function isValidEnsName(name: string): boolean {
+  const normalized = name.trim().toLowerCase()
+  if (normalized.length === 0 || normalized.length > 255) return false
+  if (/\s/.test(normalized)) return false
+  if (/[\u0000-\u001f\u007f]/.test(normalized)) return false
+  if (/[<>"'`\\{}|~^\[\]]/.test(normalized)) return false
+  // No empty labels — "a..eth" or a trailing dot besides a lone "." root.
+  const labels = normalized.replace(/\.$/, "").split(".")
+  return labels.every((label) => label.length > 0)
+}
+
 export async function resolveEns(name: string): Promise<EnsRecord> {
   const provider = new ethers.JsonRpcProvider(RPC_URL)
 
@@ -29,16 +44,15 @@ export async function resolveEns(name: string): Promise<EnsRecord> {
 
   // 2. Text records — these drive the stealth browser enrichment
   const resolver = await provider.getResolver(normalizedName)
-  const [avatar, website, twitter, github, discord, email, description] =
-    await Promise.all([
-      resolver ? resolver.getAvatar().catch(() => null) : Promise.resolve(null),
-      safeText(resolver, "url"),
-      safeText(resolver, "com.twitter"),
-      safeText(resolver, "com.github"),
-      safeText(resolver, "com.discord"),
-      safeText(resolver, "email"),
-      safeText(resolver, "description"),
-    ])
+  const [avatar, website, twitter, github, discord, email, description] = await Promise.all([
+    resolver ? resolver.getAvatar().catch(() => null) : Promise.resolve(null),
+    safeText(resolver, "url"),
+    safeText(resolver, "com.twitter"),
+    safeText(resolver, "com.github"),
+    safeText(resolver, "com.discord"),
+    safeText(resolver, "email"),
+    safeText(resolver, "description"),
+  ])
 
   // 3. Reverse lookup — what other names point to this address?
   const reverseName = await provider.lookupAddress(address)
@@ -61,10 +75,7 @@ export async function resolveEns(name: string): Promise<EnsRecord> {
   }
 }
 
-async function safeText(
-  resolver: ethers.EnsResolver | null,
-  key: string,
-): Promise<string | null> {
+async function safeText(resolver: ethers.EnsResolver | null, key: string): Promise<string | null> {
   if (!resolver) return null
   try {
     const value = await resolver.getText(key)

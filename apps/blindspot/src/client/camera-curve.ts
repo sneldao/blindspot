@@ -20,12 +20,7 @@ const curvePoints: THREE.Vector3[] = [
   new THREE.Vector3(0, 0, PANEL_Z[4] + 5), // Panel 4: Verdict
 ]
 
-export const cameraCurve = new THREE.CatmullRomCurve3(
-  curvePoints,
-  false,
-  "catmullrom",
-  0.5,
-)
+export const cameraCurve = new THREE.CatmullRomCurve3(curvePoints, false, "catmullrom", 0.5)
 
 // Panel center positions (for camera lookAt)
 export const panelCenters: THREE.Vector3[] = PANEL_Z.map((z, i) => {

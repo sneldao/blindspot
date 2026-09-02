@@ -5,6 +5,7 @@
 // center because that's the thesis — not an afterthought.
 
 import type { InvestigationReport } from "./types.js"
+import { riskColorFor, riskLabelFor } from "./format.js"
 import { writeFileSync } from "node:fs"
 import { join } from "node:path"
 
@@ -17,8 +18,8 @@ export function generateReport(report: InvestigationReport, outputDir: string): 
 }
 
 function renderHtml(r: InvestigationReport): string {
-  const riskColor = r.risk.overallScore >= 60 ? "#e74c3c" : r.risk.overallScore >= 30 ? "#f39c12" : "#27ae60"
-  const riskLabel = r.risk.overallScore >= 60 ? "HIGH RISK" : r.risk.overallScore >= 30 ? "MODERATE" : "LOW RISK"
+  const riskColor = riskColorFor(r.risk.overallScore)
+  const riskLabel = riskLabelFor(r.risk.overallScore)
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -95,15 +96,15 @@ function renderHtml(r: InvestigationReport): string {
   <p class="muted" style="margin-bottom: 0.75rem">This investigation was conducted without exposing the investigator's identity, traffic, or history.</p>
   <h3>Protected data</h3>
   <ul>
-    ${r.privacy.protectedData.map(d => `<li>${esc(d)}</li>`).join("")}
+    ${r.privacy.protectedData.map((d) => `<li>${esc(d)}</li>`).join("")}
   </ul>
   <h3>Adversaries</h3>
   <ul>
-    ${r.privacy.adversaries.map(a => `<li>${esc(a)}</li>`).join("")}
+    ${r.privacy.adversaries.map((a) => `<li>${esc(a)}</li>`).join("")}
   </ul>
   <h3>Mechanisms</h3>
   <ul>
-    ${r.privacy.mechanisms.map(m => `<li class="mechanism">${esc(m)}</li>`).join("")}
+    ${r.privacy.mechanisms.map((m) => `<li class="mechanism">${esc(m)}</li>`).join("")}
   </ul>
   <div class="grid" style="margin-top: 1rem">
     <div class="stat">
@@ -124,7 +125,7 @@ function renderHtml(r: InvestigationReport): string {
     <div>
       <p><span class="muted">Name:</span> <strong>${esc(r.target.name)}</strong></p>
       <p><span class="muted">Address:</span> <span class="mono">${esc(r.target.address)}</span></p>
-      ${r.target.aliases.length > 0 ? `<p><span class="muted">Aliases:</span> ${r.target.aliases.map(a => esc(a)).join(", ")}</p>` : ""}
+      ${r.target.aliases.length > 0 ? `<p><span class="muted">Aliases:</span> ${r.target.aliases.map((a) => esc(a)).join(", ")}</p>` : ""}
     </div>
     <div>
       ${r.target.website ? `<p>🌐 <a href="${esc(r.target.website)}">${esc(r.target.website)}</a></p>` : ""}
@@ -145,14 +146,19 @@ function renderHtml(r: InvestigationReport): string {
       <p class="muted" style="margin-top: 4px">${esc(r.risk.summary)}</p>
     </div>
   </div>
-  ${r.risk.signals.length === 0
-    ? '<p class="muted">No signals detected.</p>'
-    : r.risk.signals.map(s => `
+  ${
+    r.risk.signals.length === 0
+      ? '<p class="muted">No signals detected.</p>'
+      : r.risk.signals
+          .map(
+            (s) => `
     <div class="signal ${s.severity}">
       <span class="cat">${esc(s.category)}</span>
       <div class="label">${esc(s.label)}</div>
       <div class="detail">${esc(s.detail)}</div>
-    </div>`).join("")
+    </div>`,
+          )
+          .join("")
   }
 </div>
 
@@ -165,54 +171,80 @@ function renderHtml(r: InvestigationReport): string {
       <div class="label">Total Holdings</div>
     </div>
     <div class="stat">
-      <div class="value ${r.onchain.totalRealizedPnlUSD >= 0 ? 'pos' : 'neg'}">
-        ${r.onchain.totalRealizedPnlUSD >= 0 ? '+' : ''}$${fmt(r.onchain.totalRealizedPnlUSD)}
+      <div class="value ${r.onchain.totalRealizedPnlUSD >= 0 ? "pos" : "neg"}">
+        ${r.onchain.totalRealizedPnlUSD >= 0 ? "+" : ""}$${fmt(r.onchain.totalRealizedPnlUSD)}
       </div>
       <div class="label">Realized PnL</div>
     </div>
   </div>
-  ${r.onchain.portfolio.length > 0 ? `
+  ${
+    r.onchain.portfolio.length > 0
+      ? `
   <table>
     <tr><th>Token</th><th>Balance</th><th>USD Value</th><th>Chain</th></tr>
-    ${r.onchain.portfolio.slice(0, 10).map(a => `
+    ${r.onchain.portfolio
+      .slice(0, 10)
+      .map(
+        (a) => `
     <tr>
       <td>${esc(a.asset.symbol)} <span class="muted">${esc(a.asset.name)}</span></td>
       <td>${fmtNum(a.walletBalance)}</td>
       <td>$${fmt(a.amountUSD)}</td>
       <td class="mono">${esc(a.asset.blockchain)}</td>
-    </tr>`).join("")}
-  </table>` : '<p class="muted">No holdings found.</p>'}
+    </tr>`,
+      )
+      .join("")}
+  </table>`
+      : '<p class="muted">No holdings found.</p>'
+  }
 </div>
 
 <!-- POSITIONS WITH PNL -->
-${r.onchain.positions.length > 0 ? `
+${
+  r.onchain.positions.length > 0
+    ? `
 <div class="card">
   <h2 style="margin-top:0; border:none">Trading Positions & PnL</h2>
   <table>
     <tr><th>Token</th><th>Buys</th><th>Sells</th><th>Realized PnL</th><th>Unrealized</th></tr>
-    ${r.onchain.positions.slice(0, 10).map(p => `
+    ${r.onchain.positions
+      .slice(0, 10)
+      .map(
+        (p) => `
     <tr>
       <td>${esc(p.token.symbol)}</td>
       <td>${p.buys}</td>
       <td>${p.sells}</td>
-      <td class="${p.realizedPnlUSD >= 0 ? 'pos' : 'neg'}">${p.realizedPnlUSD >= 0 ? '+' : ''}$${fmt(p.realizedPnlUSD)}</td>
-      <td class="${p.unrealizedPnlUSD >= 0 ? 'pos' : 'neg'}">${p.unrealizedPnlUSD >= 0 ? '+' : ''}$${fmt(p.unrealizedPnlUSD)}</td>
-    </tr>`).join("")}
+      <td class="${p.realizedPnlUSD >= 0 ? "pos" : "neg"}">${p.realizedPnlUSD >= 0 ? "+" : ""}$${fmt(p.realizedPnlUSD)}</td>
+      <td class="${p.unrealizedPnlUSD >= 0 ? "pos" : "neg"}">${p.unrealizedPnlUSD >= 0 ? "+" : ""}$${fmt(p.unrealizedPnlUSD)}</td>
+    </tr>`,
+      )
+      .join("")}
   </table>
-</div>` : ""}
+</div>`
+    : ""
+}
 
 <!-- OFF-CHAIN CONTEXT -->
-${r.offChain.length > 0 ? `
+${
+  r.offChain.length > 0
+    ? `
 <div class="card">
   <h2 style="margin-top:0; border:none">Off-Chain Context (Stealth Browser)</h2>
   <p class="muted" style="margin-bottom: 0.75rem">Fetched via residential proxy — target saw ${esc(r.offChain[0].egressIp)}, not the investigator.</p>
-  ${r.offChain.map(c => `
+  ${r.offChain
+    .map(
+      (c) => `
   <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border)">
     <p><strong>${esc(c.title)}</strong> <span class="muted">— ${esc(c.url)}</span></p>
     <p class="muted">${esc(c.description ?? "No description")}</p>
-    ${c.socialLinks.length > 0 ? `<p class="mono" style="font-size:0.75rem; margin-top:4px">Socials: ${c.socialLinks.map(s => esc(s)).join(" · ")}</p>` : ""}
-  </div>`).join("")}
-</div>` : ""}
+    ${c.socialLinks.length > 0 ? `<p class="mono" style="font-size:0.75rem; margin-top:4px">Socials: ${c.socialLinks.map((s) => esc(s)).join(" · ")}</p>` : ""}
+  </div>`,
+    )
+    .join("")}
+</div>`
+    : ""
+}
 
 <div class="footer">
   <p>Blindspot — Privacy-Preserving Onchain Investigation Agent</p>
@@ -230,6 +262,7 @@ function esc(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
 }
 
 function fmt(n: number): string {

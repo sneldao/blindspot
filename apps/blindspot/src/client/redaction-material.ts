@@ -185,9 +185,7 @@ export interface RedactionMaterialOptions {
   noiseScale?: number
 }
 
-export function createRedactionMaterial(
-  opts: RedactionMaterialOptions = {},
-): THREE.ShaderMaterial {
+export function createRedactionMaterial(opts: RedactionMaterialOptions = {}): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       proximity: { value: 0 },

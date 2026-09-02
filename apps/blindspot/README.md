@@ -17,11 +17,11 @@ Blindspot protects the **investigator** — the person looking.
 
 Three layers of metadata are protected:
 
-| Layer | What's protected | Mechanism |
-|-------|-----------------|-----------|
-| **Who** | Investigator's IP and fingerprint | Solari stealth browser + residential proxy |
-| **That** | That an investigation occurred | Ephemeral sandbox, killed after, no persistent state |
-| **What** | What onchain data was queried | Mobula API calls run inside the sandbox, not the investigator's IP |
+| Layer    | What's protected                  | Mechanism                                                          |
+| -------- | --------------------------------- | ------------------------------------------------------------------ |
+| **Who**  | Investigator's IP and fingerprint | Solari stealth browser + residential proxy                         |
+| **That** | That an investigation occurred    | Ephemeral sandbox, killed after, no persistent state               |
+| **What** | What onchain data was queried     | Mobula API calls run inside the sandbox, not the investigator's IP |
 
 ## How ENS is load-bearing
 
@@ -50,7 +50,7 @@ the sandbox's ephemeral IP, not the investigator's.
 ## Architecture
 
 ```
-npm start -- vitalik.eth
+pnpm --filter blindspot cli
   │
   ├─ 1. LOCAL: ENS resolution (ethers + public RPC)
   │     name → address, text records, reverse lookup
@@ -68,27 +68,34 @@ npm start -- vitalik.eth
   │
   ├─ 5. REPORT: self-contained HTML + privacy manifest
   │
-  └─ 6. TEARDOWN: sandbox.kill(), browser.close(), solari.close()
-        + download session recording
+  └─ 6. TEARDOWN: sandbox.kill(), browser.close() [releases session],
+        download replay, solari.close()
 ```
 
 Steps 2 and 3 run **concurrently** — the Mobula queries and web scraping happen
-in parallel.
+in parallel. The browser session is released _before_ the replay download
+(the upload starts on release) and the Solari client closes _after_ it.
 
 ## Quick start
 
+From the repository root (this is a pnpm workspace):
+
 ```bash
-cd examples/blindspot-ts
-npm install
+pnpm install
+cp apps/blindspot/.env.example apps/blindspot/.env
+
 export SOLARI_API_KEY=slr_live_...   # console.getsolari.com
-export MOBULA_API_KEY=...             # admin.mobula.io
+export MOBULA_API_KEY=...            # admin.mobula.io
 
 # Web UI (3D dossier experience)
-npm run dev
+pnpm dev:blindspot
 # → http://localhost:4567
 
 # CLI mode (terminal output + report file)
-npm run cli -- vitalik.eth
+pnpm --filter blindspot cli
+
+# Tests
+pnpm --filter blindspot test
 ```
 
 The web UI is a 3D scroll-driven dossier built with Three.js. Each panel is a
@@ -134,10 +141,14 @@ src/
     browser.ts        Solari stealth browser
     analyzer.ts       Risk scoring
     report.ts         HTML report generation
+    url-guard.ts      SSRF guard for URLs taken from ENS records
+    format.ts         Shared formatting + risk labels
     types.ts          Shared types
     events.ts         SSE event types
-  server/         CLI entry point
+  server/         CLI entry point + rate limiting
     cli.ts
+    rate-limit.ts
+  tests/          Vitest unit tests
 ```
 
 ## Solari gotchas this project handles

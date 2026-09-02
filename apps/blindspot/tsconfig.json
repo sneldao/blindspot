@@ -18,6 +18,6 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["src", "astro.config.mjs", ".astro/types.d.ts"],
+  "include": ["src", "tests", "astro.config.mjs", ".astro/types.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

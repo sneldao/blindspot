@@ -5,11 +5,7 @@
 
 import type { MobulaData, OffChainContext, EnsRecord, RiskAssessment, RiskSignal } from "./types.js"
 
-export function assessRisk(
-  target: EnsRecord,
-  onchain: MobulaData,
-  offChain: OffChainContext[],
-): RiskAssessment {
+export function assessRisk(target: EnsRecord, onchain: MobulaData, offChain: OffChainContext[]): RiskAssessment {
   const signals: RiskSignal[] = []
 
   // --- Onchain signals ---
@@ -17,9 +13,7 @@ export function assessRisk(
   // Portfolio concentration: is everything in one token?
   if (onchain.portfolio.length > 0) {
     const sorted = [...onchain.portfolio].sort((a, b) => b.amountUSD - a.amountUSD)
-    const topShare = onchain.totalValueUSD > 0
-      ? sorted[0].amountUSD / onchain.totalValueUSD
-      : 0
+    const topShare = onchain.totalValueUSD > 0 ? sorted[0].amountUSD / onchain.totalValueUSD : 0
     if (topShare > 0.8) {
       signals.push({
         category: "portfolio",
@@ -123,11 +117,12 @@ export function assessRisk(
   const overallScore = Math.min(100, rawScore)
 
   const highCount = signals.filter((s) => s.severity === "high").length
-  const summary = highCount > 0
-    ? `High-risk profile: ${highCount} critical signal(s) detected. Investigate before engaging.`
-    : overallScore > 40
-      ? "Moderate risk: several cautionary signals. Proceed with due diligence."
-      : "Low-risk profile: no critical signals. Standard caution applies."
+  const summary =
+    highCount > 0
+      ? `High-risk profile: ${highCount} critical signal(s) detected. Investigate before engaging.`
+      : overallScore > 40
+        ? "Moderate risk: several cautionary signals. Proceed with due diligence."
+        : "Low-risk profile: no critical signals. Standard caution applies."
 
   return { overallScore, signals, summary }
 }

@@ -1,6 +1,7 @@
 // CLI entry point — run an investigation from the terminal.
-// Usage: tsx src/server/cli.ts vitalik.eth
+// Usage: pnpm --filter blindspot cli [ens-name]
 
+import { execFile } from "node:child_process"
 import { investigate } from "../lib/orchestrator.js"
 
 const args = process.argv.slice(2)
@@ -47,8 +48,7 @@ investigate(ensName, {
         console.log(`  sandbox: ${event.sandboxId}`)
         break
       case "browser:connected":
-        if (event.egressIp !== "detecting...")
-          console.log(`  proxy: ${event.egressIp} (${event.proxyCountry})`)
+        if (event.egressIp !== "detecting...") console.log(`  proxy: ${event.egressIp} (${event.proxyCountry})`)
         break
       case "mobula:data":
         console.log(`  onchain: $${event.totalValueUSD.toFixed(0)} · ${event.assetCount} assets`)
@@ -68,7 +68,12 @@ investigate(ensName, {
   },
 })
   .then((path) => {
-    import("node:child_process").then(({ exec }) => exec(`open "${path}"`))
+    // execFile (no shell) — the path embeds the user-supplied ENS name, so a
+    // shell string would be command injection.
+    const opener = process.platform === "darwin" ? "open" : process.platform === "win32" ? "explorer" : "xdg-open"
+    execFile(opener, [path], (err) => {
+      if (err) console.log(`  could not open report automatically: ${err.message}`)
+    })
   })
   .catch((err) => {
     console.error("Investigation failed:", err)

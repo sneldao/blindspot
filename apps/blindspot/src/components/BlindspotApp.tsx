@@ -9,13 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import * as THREE from "three"
 import { createScene, type SceneContext } from "../client/scene.js"
 import { createScrollSystem, type ScrollSystem } from "../client/scroll.js"
-import {
-  getCameraPosition,
-  getLookAtTarget,
-  getActivePanel,
-  panelCenters,
-  PANEL_Z,
-} from "../client/camera-curve.js"
+import { getCameraPosition, getLookAtTarget, getActivePanel, panelCenters, PANEL_Z } from "../client/camera-curve.js"
 import {
   buildCoverPanel,
   buildPanels,
@@ -24,6 +18,8 @@ import {
   type InvestigationData,
 } from "../client/panels.js"
 import { pickChartSegment } from "../client/chart.js"
+import { formatCompact } from "../lib/format.js"
+import type { InvestigationEvent } from "../lib/events.js"
 
 type Phase = "search" | "loading" | "investigating" | "verdict" | "error"
 
@@ -100,8 +96,7 @@ export default function BlindspotApp() {
       // Portrait viewports see a narrow horizontal slice of the world; dolly
       // back along the view direction so the dossier plate stays in frame
       const aspect = window.innerWidth / window.innerHeight
-      const needed =
-        3.2 / (Math.tan(THREE.MathUtils.degToRad(ctx.camera.fov) / 2) * aspect)
+      const needed = 3.2 / (Math.tan(THREE.MathUtils.degToRad(ctx.camera.fov) / 2) * aspect)
       let dist = camPos.distanceTo(lookTarget)
       if (needed > dist) {
         DOLLY_DIR.copy(camPos).sub(lookTarget).normalize()
@@ -151,17 +146,8 @@ export default function BlindspotApp() {
         }
 
         // Chart hover — fine pointers only
-        if (
-          hoverEnabledRef.current &&
-          getActivePanel(progress) === 2 &&
-          panelSystem.chart
-        ) {
-          const hit = pickChartSegment(
-            raycasterRef.current,
-            pointerRef.current,
-            ctx.camera,
-            panelSystem.chart,
-          )
+        if (hoverEnabledRef.current && getActivePanel(progress) === 2 && panelSystem.chart) {
+          const hit = pickChartSegment(raycasterRef.current, pointerRef.current, ctx.camera, panelSystem.chart)
           if (hit !== hoveredRef.current) {
             unhighlight(hoveredRef.current)
             hoveredRef.current = hit
@@ -256,7 +242,15 @@ export default function BlindspotApp() {
       const eventSource = new EventSource(url)
 
       eventSource.onmessage = async (e) => {
-        const event = JSON.parse(e.data)
+        // A malformed frame is logged and skipped — throwing here would land
+        // in an unhandled rejection and kill the stream handling silently.
+        let event: InvestigationEvent
+        try {
+          event = JSON.parse(e.data)
+        } catch {
+          console.warn("discarding malformed SSE frame:", e.data)
+          return
+        }
 
         switch (event.type) {
           case "ens:resolved":
@@ -315,18 +309,8 @@ export default function BlindspotApp() {
             if (!data.realizedPnlUSD) data.realizedPnlUSD = 0
             if (!data.egressIp) data.egressIp = "unknown"
             if (!data.proxyCountry) data.proxyCountry = "us"
-            if (data.topHoldings!.length === 0) {
-              data.topHoldings = [
-                { symbol: "ETH", value: data.totalValueUSD * 0.5, percentage: 50 },
-                { symbol: "USDC", value: data.totalValueUSD * 0.3, percentage: 30 },
-                { symbol: "WBTC", value: data.totalValueUSD * 0.2, percentage: 20 },
-              ]
-            }
-            if (data.offchainSources!.length === 0) {
-              data.offchainSources = data.website
-                ? [{ url: data.website, title: data.ensName || "unknown", screenshotUrl: null }]
-                : []
-            }
+            // No synthetic fill-in: empty holdings / sources render as honest
+            // empty states in the panels.
 
             await loadPanels(data as InvestigationData)
             break
@@ -643,12 +627,4 @@ function unhighlight(mesh: THREE.Mesh | null) {
 
 function originalColorOf(mesh: THREE.Mesh): string {
   return (mesh.userData as { originalColor: string }).originalColor
-}
-
-function formatCompact(n: number): string {
-  const abs = Math.abs(n)
-  const trim = (s: string) => s.replace(/\.0$/, "")
-  if (abs >= 1e6) return trim((n / 1e6).toFixed(1)) + "M"
-  if (abs >= 1e3) return trim((n / 1e3).toFixed(1)) + "K"
-  return n.toFixed(0)
 }

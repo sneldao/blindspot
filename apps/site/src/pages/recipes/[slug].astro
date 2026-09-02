@@ -1,4 +1,6 @@
 ---
+import { readFileSync } from "node:fs"
+import { marked } from "marked"
 import Layout from "../../layouts/Layout.astro"
 import { recipes, getRecipe } from "../../data/recipes.ts"
 
@@ -12,6 +14,22 @@ const recipe = getRecipe(slug!)
 if (!recipe) {
   throw new Error(`Recipe not found: ${slug}`)
 }
+
+// The full recipe source lives in content/recipes/*.md at the repo root —
+// the same files the README links to. Render the body here so the recipe
+// page is the recipe, not just its metadata. The leading H1 is stripped:
+// the page header above already carries the title.
+const mdPath = new URL(`../../../../../content/recipes/${slug}.md`, import.meta.url)
+let markdown = ""
+try {
+  markdown = readFileSync(mdPath, "utf-8")
+} catch {
+  // Missing source file — the metadata above still renders.
+}
+const recipeHtml = marked.parse(
+  markdown.replace(/^#\s+[^\n]*\n/, "").trimStart(),
+  { async: false },
+)
 
 const primitiveLabel: Record<string, string> = {
   browser: "Browser",
@@ -41,7 +59,7 @@ const primitiveLabel: Record<string, string> = {
       {recipe.description}
     </p>
 
-    <div class="flex flex-wrap gap-3">
+    <div class="flex flex-wrap gap-3 mb-12">
       {recipe.status === "live" && recipe.demo && (
         <a href={recipe.demo} class="sc-button-accent">Try the experience</a>
       )}
@@ -49,5 +67,25 @@ const primitiveLabel: Record<string, string> = {
         <a href={`https://github.com/scudra/scudra/tree/main/${recipe.source}`} class="sc-button-secondary">View source</a>
       )}
     </div>
+
+    {recipeHtml && (
+      <div class="recipe-doc" set:html={recipeHtml} />
+    )}
   </article>
 </Layout>
+
+<!-- set:html content is first-party repo markdown; the selectors must be
+     global because injected HTML carries no Astro scope attribute. -->
+<style is:global>
+  .recipe-doc { border-top: 1px solid rgb(0 0 0 / 0.08); padding-top: 2.5rem; font-size: 1.05rem; }
+  .recipe-doc h2 { font-family: var(--sc-font-serif, Georgia, serif); font-size: 1.5rem; margin: 2.25rem 0 0.75rem; letter-spacing: -0.01em; color: var(--sc-ink); }
+  .recipe-doc h3 { font-size: 1.125rem; margin: 1.75rem 0 0.5rem; color: var(--sc-ink); }
+  .recipe-doc p, .recipe-doc li { color: var(--sc-ink-muted); line-height: 1.7; }
+  .recipe-doc ul, .recipe-doc ol { margin: 0.75rem 0 0.75rem 1.5rem; list-style: revert; }
+  .recipe-doc li { margin: 0.35rem 0; }
+  .recipe-doc code { font-family: var(--sc-font-mono, monospace); font-size: 0.875em; background: rgb(0 0 0 / 0.05); padding: 0.15em 0.4em; border-radius: 4px; }
+  .recipe-doc pre { background: rgb(0 0 0 / 0.05); padding: 1rem; border-radius: 8px; overflow-x: auto; margin: 1rem 0; }
+  .recipe-doc pre code { background: none; padding: 0; }
+  .recipe-doc blockquote { border-left: 3px solid var(--sc-accent); padding-left: 1rem; margin: 1rem 0; }
+  .recipe-doc a { text-decoration: underline; text-underline-offset: 3px; }
+</style>

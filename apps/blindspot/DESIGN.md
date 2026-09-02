@@ -204,6 +204,7 @@ investigation runs. A single plane, centered, facing the camera, with no
 redaction layers.
 
 Content:
+
 - "— BLINDSPOT —" classified mark, then "Blindspot" in Fraunces, large
 - "Privacy-preserving onchain investigation" in Inter, ink-muted
 - A deliberately blank band below the tagline
@@ -278,8 +279,8 @@ and the cover is rebuilt so the room is never empty.
 
 ```js
 const lenis = new Lenis({
-  lerp: 0.08,         // smooth, not instant
-  duration: 1.2,      // momentum duration
+  lerp: 0.08, // smooth, not instant
+  duration: 1.2, // momentum duration
   smoothWheel: !prefersReducedMotion,
 })
 ```
@@ -402,14 +403,14 @@ glimpses of uncovered lines), never as a black slab.
 
 Each redaction material is a `THREE.ShaderMaterial` with uniforms:
 
-| Uniform | Meaning |
-|---------|---------|
-| `proximity` | 0 = fully redacted, 1 = fully revealed (from camera distance) |
-| `layerThreshold` | proximity at which this layer starts dissolving |
-| `dissolveRange` | proximity span of the dissolution (default 0.25) |
-| `time` | slow noise boil while dissolving |
-| `inkColor` / `glowColor` | ink (token ink) and terracotta edge glow |
-| `noiseScale` | ink patch scale, varied per layer |
+| Uniform                  | Meaning                                                       |
+| ------------------------ | ------------------------------------------------------------- |
+| `proximity`              | 0 = fully redacted, 1 = fully revealed (from camera distance) |
+| `layerThreshold`         | proximity at which this layer starts dissolving               |
+| `dissolveRange`          | proximity span of the dissolution (default 0.25)              |
+| `time`                   | slow noise boil while dissolving                              |
+| `inkColor` / `glowColor` | ink (token ink) and terracotta edge glow                      |
+| `noiseScale`             | ink patch scale, varied per layer                             |
 
 The fragment shader thresholds **domain-warped fbm noise** against the
 dissolve progress: ink recedes in organic patches rather than a clean wipe,
@@ -520,6 +521,7 @@ chart segment color imports from it.
   showing risk colors before the verdict would prejudice the reading.
 
 ### Do not
+
 - Use pure white (`#fff`). Paper has warmth.
 - Use dark mode. This is a light, editorial experience.
 - Use gradients on UI elements. The only gradient is the fog falloff.
@@ -541,28 +543,28 @@ texture pipeline (the foreignObject sandbox cannot fetch fonts).
 
 ### Scale (texture CSS pixels, at PX_PER_UNIT = 160)
 
-| Use | Font | Size | Weight | Tracking |
-|-----|------|------|--------|----------|
-| Wordmark | Fraunces | 56px | 400 | -0.02em |
-| Panel heading | Fraunces | 36px | 400 | -0.02em |
-| Risk score | Fraunces | 96px | 400 | line-height 1 |
-| Large numbers | Fraunces | 48px | 400 | -0.02em |
-| Tagline | Inter | 17px | 400 | -0.01em |
-| Body text | Inter | 14px | 400 | -0.01em |
-| Metadata | Inter | 13px | 400 | -0.01em |
-| Section label | Inter | 11px | 400 | 0.08em uppercase |
-| Mono identifiers | JetBrains Mono | 11–13px | 400 | 0 |
-| Classified mark | Inter | 10px | 600 | 0.15em uppercase |
+| Use              | Font           | Size    | Weight | Tracking         |
+| ---------------- | -------------- | ------- | ------ | ---------------- |
+| Wordmark         | Fraunces       | 56px    | 400    | -0.02em          |
+| Panel heading    | Fraunces       | 36px    | 400    | -0.02em          |
+| Risk score       | Fraunces       | 96px    | 400    | line-height 1    |
+| Large numbers    | Fraunces       | 48px    | 400    | -0.02em          |
+| Tagline          | Inter          | 17px    | 400    | -0.01em          |
+| Body text        | Inter          | 14px    | 400    | -0.01em          |
+| Metadata         | Inter          | 13px    | 400    | -0.01em          |
+| Section label    | Inter          | 11px    | 400    | 0.08em uppercase |
+| Mono identifiers | JetBrains Mono | 11–13px | 400    | 0                |
+| Classified mark  | Inter          | 10px    | 600    | 0.15em uppercase |
 
 ## Motion
 
 ### Easing
 
-| Token | Curve | Use |
-|-------|-------|-----|
-| `--ease-reveal` | `cubic-bezier(0.22, 1, 0.36, 1)` | DOM overlay reveals |
-| `--ease-reverse` | `cubic-bezier(0.4, 0, 0.2, 1)` | DOM overlay closes (snappy) |
-| `--ease-camera` | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Scroll-return on reset |
+| Token            | Curve                              | Use                         |
+| ---------------- | ---------------------------------- | --------------------------- |
+| `--ease-reveal`  | `cubic-bezier(0.22, 1, 0.36, 1)`   | DOM overlay reveals         |
+| `--ease-reverse` | `cubic-bezier(0.4, 0, 0.2, 1)`     | DOM overlay closes (snappy) |
+| `--ease-camera`  | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Scroll-return on reset      |
 
 Panel declassification needs no easing curve: it is a pure function of
 proximity, so it inherits the scroll's own momentum from Lenis.
@@ -603,13 +605,13 @@ proximity, so it inherits the scroll's own momentum from Lenis.
 
 ## Dependencies
 
-| Library | Version | Source | Purpose |
-|---------|---------|--------|---------|
-| Three.js | ^0.170 | npm | 3D engine: scene, camera, meshes, lighting, fog, raycasting |
-| Lenis | ^1.1 | npm | Smooth momentum scrolling |
-| React | ^19 | npm | Single island: lifecycle state, DOM overlays |
-| Astro | ^5 | npm | Page, layout, API route, meta, font CSS |
-| @fontsource/fraunces, /inter, /jetbrains-mono | latest | npm | Self-hosted faces for DOM and texture embedding |
+| Library                                       | Version | Source | Purpose                                                     |
+| --------------------------------------------- | ------- | ------ | ----------------------------------------------------------- |
+| Three.js                                      | ^0.170  | npm    | 3D engine: scene, camera, meshes, lighting, fog, raycasting |
+| Lenis                                         | ^1.1    | npm    | Smooth momentum scrolling                                   |
+| React                                         | ^19     | npm    | Single island: lifecycle state, DOM overlays                |
+| Astro                                         | ^5      | npm    | Page, layout, API route, meta, font CSS                     |
+| @fontsource/fraunces, /inter, /jetbrains-mono | latest  | npm    | Self-hosted faces for DOM and texture embedding             |
 
 No tween library. No GSAP, no ScrollTrigger — proximity and scroll progress
 drive everything. All loaded via npm (not CDN) for reliable, version-pinned
@@ -661,6 +663,7 @@ builds. Three.js is imported as a module: `import * as THREE from 'three'`.
 ## Do's and Don'ts
 
 ### Do
+
 - Use Three.js for all 3D — real scene, real camera, real depth.
 - Project HTML to canvas textures for panel content, sized from world units
   at PX_PER_UNIT = 160 with embedded base64 fonts.
@@ -673,6 +676,7 @@ builds. Three.js is imported as a module: `import * as THREE from 'three'`.
 - Respect `prefers-reduced-motion`.
 
 ### Don't
+
 - Use CSS perspective or `translateZ` to fake 3D.
 - Use dark mode or a dark palette.
 - Use the orb, breathing animations, or any infinite loops.

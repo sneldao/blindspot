@@ -12,16 +12,12 @@ export interface ScrollSystem {
   dispose: () => void
 }
 
-export function createScrollSystem(
-  onScroll: (progress: number) => void,
-): ScrollSystem {
+export function createScrollSystem(onScroll: (progress: number) => void): ScrollSystem {
   // Set body height to create scrollable space (5 panels × 100vh)
   document.body.style.height = "500vh"
   document.body.style.overflow = "auto"
 
-  const prefersReducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
   const lenis = new Lenis({
     lerp: 0.08,

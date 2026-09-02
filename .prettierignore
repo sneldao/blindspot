@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.astro/
+.ruff_cache/
+pnpm-lock.yaml
+reports/
+examples/

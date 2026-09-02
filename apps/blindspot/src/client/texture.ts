@@ -20,13 +20,9 @@ export interface TextureOptions {
   scale?: number
 }
 
-export async function htmlToTexture(
-  html: string,
-  opts: TextureOptions,
-): Promise<THREE.CanvasTexture> {
+export async function htmlToTexture(html: string, opts: TextureOptions): Promise<THREE.CanvasTexture> {
   const { worldWidth, worldHeight } = opts
-  const scale =
-    opts.scale ?? Math.min(2, Math.max(1, window.devicePixelRatio || 1))
+  const scale = opts.scale ?? Math.min(2, Math.max(1, window.devicePixelRatio || 1))
 
   const cw = Math.round(worldWidth * PX_PER_UNIT)
   const ch = Math.round(worldHeight * PX_PER_UNIT)

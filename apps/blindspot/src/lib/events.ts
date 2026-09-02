@@ -15,7 +15,14 @@
 export type InvestigationEvent =
   | { type: "started"; ensName: string }
   | { type: "phase"; phase: PhaseLabel; status: "working" | "done"; detail?: string }
-  | { type: "ens:resolved"; name: string; address: string; aliases: string[]; website: string | null; twitter: string | null }
+  | {
+      type: "ens:resolved"
+      name: string
+      address: string
+      aliases: string[]
+      website: string | null
+      twitter: string | null
+    }
   | { type: "sandbox:booted"; sandboxId: string }
   | { type: "browser:connected"; egressIp: string; proxyCountry: string }
   | { type: "mobula:data"; totalValueUSD: number; assetCount: number; realizedPnlUSD: number }
@@ -24,13 +31,7 @@ export type InvestigationEvent =
   | { type: "complete"; report: CompletePayload }
   | { type: "error"; message: string }
 
-export type PhaseLabel =
-  | "resolving"
-  | "sandbox"
-  | "proxy"
-  | "onchain"
-  | "offchain"
-  | "analyzing"
+export type PhaseLabel = "resolving" | "sandbox" | "proxy" | "onchain" | "offchain" | "analyzing"
 
 export interface CompletePayload {
   riskScore: number

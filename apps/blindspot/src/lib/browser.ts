@@ -10,16 +10,21 @@
 // not a video file — small and diffable.
 //
 // CRITICAL: `solari.close()` must be called or the Node process hangs forever
-// (the client keeps a loopback proxy open for connection retries).
+// (the client keeps a loopback proxy open for connection retries). But it must
+// happen AFTER `downloadRecording` — the replay is uploaded asynchronously
+// once the session is released, and the download needs the client. So the
+// lifecycle is: browser.close() (releases the session) → downloadRecording()
+// → solari.close().
 
-import { Solari } from "@solarisdk/browser"
+import { Solari, SolariError, type BrowserSession, type ResolvedProxyConfig } from "@solarisdk/browser"
 import type { OffChainContext, EnsRecord } from "./types.js"
+import { isPublicHttpUrl } from "./url-guard.js"
 
 export interface BrowserHandle {
   solari: Solari
-  browser: any // Playwright Browser
+  browser: BrowserSession
   sessionId: string
-  proxy: any
+  proxy: ResolvedProxyConfig | undefined
 }
 
 export async function createStealthBrowser(apiKey: string): Promise<BrowserHandle> {
@@ -38,10 +43,7 @@ export async function createStealthBrowser(apiKey: string): Promise<BrowserHandl
   return { solari, browser, sessionId: browser.id, proxy: browser.proxy }
 }
 
-export async function enrichOffChain(
-  handle: BrowserHandle,
-  target: EnsRecord,
-): Promise<OffChainContext[]> {
+export async function enrichOffChain(handle: BrowserHandle, target: EnsRecord): Promise<OffChainContext[]> {
   const contexts: OffChainContext[] = []
   const page = await handle.browser.newPage()
 
@@ -50,14 +52,24 @@ export async function enrichOffChain(
   const egressIp = JSON.parse(await page.locator("pre").innerText()).ip
   console.log(`  [browser] egress IP: ${egressIp} (residential proxy)`)
 
-  // Collect URLs to visit from ENS text records.
-  const urls: string[] = []
-  if (target.website) urls.push(target.website)
+  // Collect URLs to visit from ENS text records, and drop anything that could
+  // turn the browser session into a probe of internal infrastructure.
+  const candidates: string[] = []
+  if (target.website) candidates.push(target.website)
   if (target.twitter) {
-    urls.push(`https://x.com/${target.twitter.replace(/^@/, "")}`)
+    candidates.push(`https://x.com/${target.twitter.replace(/^@/, "")}`)
   }
   if (target.github) {
-    urls.push(`https://github.com/${target.github.replace(/^@/, "")}`)
+    candidates.push(`https://github.com/${target.github.replace(/^@/, "")}`)
+  }
+
+  const urls: string[] = []
+  for (const url of candidates) {
+    if (await isPublicHttpUrl(url)) {
+      urls.push(url)
+    } else {
+      console.log(`  [browser] skipping non-public URL from ENS records: ${url}`)
+    }
   }
 
   for (const url of urls.slice(0, 3)) {
@@ -72,7 +84,11 @@ export async function enrichOffChain(
           document.querySelector(`meta[name="${name}"]`)?.getAttribute("content") ||
           null
 
-        const socialLinks = Array.from(document.querySelectorAll('a[href*="twitter.com"], a[href*="x.com"], a[href*="github.com"], a[href*="discord.com"], a[href*="t.me"]'))
+        const socialLinks = Array.from(
+          document.querySelectorAll(
+            'a[href*="twitter.com"], a[href*="x.com"], a[href*="github.com"], a[href*="discord.com"], a[href*="t.me"]',
+          ),
+        )
           .map((a) => (a as HTMLAnchorElement).href)
           .filter((h) => h && !h.includes("/share"))
           .slice(0, 5)
@@ -89,7 +105,7 @@ export async function enrichOffChain(
       contexts.push({
         url,
         title: meta.title,
-        description: meta.description,
+        description: meta.description ?? "",
         ogImage: meta.ogImage,
         socialLinks: meta.socialLinks,
         rawSnippet: meta.rawSnippet,
@@ -105,19 +121,23 @@ export async function enrichOffChain(
   return contexts
 }
 
-export async function closeBrowser(handle: BrowserHandle): Promise<void> {
-  // browser.close() also RELEASES the session.
+export async function releaseBrowserSession(handle: BrowserHandle): Promise<void> {
+  // browser.close() also RELEASES the session (which starts the async replay
+  // upload). The Solari client stays open so downloadRecording can poll.
   await handle.browser.close()
-  // REQUIRED in Node — the loopback proxy keeps the event loop alive.
-  await handle.solari.close()
-  console.log(`  [browser] closed session ${handle.sessionId}`)
+  console.log(`  [browser] released session ${handle.sessionId}`)
 }
 
-export async function downloadRecording(
-  handle: BrowserHandle,
-): Promise<{ sessionId: string; available: boolean }> {
+export async function closeBrowserClient(handle: BrowserHandle): Promise<void> {
+  // REQUIRED in Node — the loopback proxy keeps the event loop alive.
+  await handle.solari.close()
+  console.log(`  [browser] closed client ${handle.sessionId}`)
+}
+
+export async function downloadRecording(handle: BrowserHandle): Promise<{ sessionId: string; available: boolean }> {
   // The upload happens asynchronously AFTER the session is released, so we
-  // poll for ~30s before concluding there's no replay.
+  // poll for ~30s before concluding there's no replay. Requires the session
+  // to be released AND the client to still be open.
   for (let attempt = 1; attempt <= 10; attempt++) {
     await new Promise((r) => setTimeout(r, 3000))
     try {
@@ -125,8 +145,8 @@ export async function downloadRecording(
       const events = blob.toString().split("\n").filter(Boolean)
       console.log(`  [browser] recording: ${blob.length} bytes, ${events.length} rrweb events`)
       return { sessionId: handle.sessionId, available: true }
-    } catch (err: any) {
-      if (err.status === 404) {
+    } catch (err) {
+      if (err instanceof SolariError && err.status === 404) {
         console.log(`  [browser] replay not uploaded yet (attempt ${attempt})`)
         continue
       }

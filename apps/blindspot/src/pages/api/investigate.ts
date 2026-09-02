@@ -1,16 +1,41 @@
 // SSE endpoint — streams investigation events to the browser.
 // GET /api/investigate?name=vitalik.eth
+//
+// Guards, in order: name must be structurally valid, config must exist, and
+// the caller must be under the rate limit. Everything fails fast BEFORE the
+// orchestrator spawns paid infrastructure.
 
 import type { APIRoute } from "astro"
-import { investigate } from "../../lib/orchestrator.js"
+import { investigate, MissingConfigError } from "../../lib/orchestrator.js"
+import { isValidEnsName } from "../../lib/ens.js"
+import { checkRateLimit, releaseSlot } from "../../server/rate-limit.js"
 import type { InvestigationEvent } from "../../lib/events.js"
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ url, clientAddress }) => {
   const ensName = url.searchParams.get("name")
-  if (!ensName) {
-    return new Response(JSON.stringify({ error: "name parameter required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
+  if (!ensName || !isValidEnsName(ensName)) {
+    return jsonResponse({ error: "Provide a valid ENS name, e.g. vitalik.eth" }, 400)
+  }
+
+  if (!process.env.SOLARI_API_KEY || !process.env.MOBULA_API_KEY) {
+    return eventStream((send) => {
+      send({
+        type: "error",
+        message: "Blindspot is not configured on this server yet — the investigation API key is missing.",
+      })
+    })
+  }
+
+  const decision = checkRateLimit(clientAddress ?? "unknown")
+  if (!decision.allowed) {
+    return eventStream((send) => {
+      send({
+        type: "error",
+        message:
+          decision.reason === "rate"
+            ? "Too many investigations from this address — try again in a few minutes."
+            : "The investigation service is already running at capacity — try again in a moment.",
+      })
     })
   }
 
@@ -29,6 +54,7 @@ export const GET: APIRoute = async ({ url }) => {
       } catch (err) {
         sendEvent({ type: "error", message: userMessage(err) })
       } finally {
+        releaseSlot()
         controller.close()
       }
     },
@@ -38,17 +64,55 @@ export const GET: APIRoute = async ({ url }) => {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
     },
+  })
+}
+
+// An SSE response carrying a single terminal error event. Keeping rejections
+// on the event stream lets the client display them through its normal error
+// path (a bare non-200 would only trip EventSource's opaque onerror).
+function eventStream(write: (send: (event: InvestigationEvent) => void) => void): Response {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder()
+      write((event) => {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`))
+      })
+      controller.close()
+    },
+  })
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  })
+}
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
   })
 }
 
 // The browser is a system boundary: internal exception text (missing keys,
 // DNS failures, stack details) must not reach it verbatim.
 function userMessage(err: unknown): string {
+  if (err instanceof MissingConfigError) {
+    return "Blindspot is not configured on this server yet — the investigation API key is missing."
+  }
   const message = err instanceof Error ? err.message : String(err)
   if (/api\s?key/i.test(message)) {
     return "Blindspot is not configured on this server yet — the investigation API key is missing."
+  }
+  if (/Invalid ENS name/.test(message)) {
+    return "That ENS name could not be resolved. Check the spelling and try again."
+  }
+  if (/No address found for ENS name/.test(message)) {
+    return "That ENS name does not resolve to an address."
   }
   if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network/i.test(message)) {
     return "An upstream data provider could not be reached. Try again in a moment."
