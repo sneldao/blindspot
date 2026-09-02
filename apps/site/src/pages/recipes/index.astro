@@ -10,33 +10,34 @@ const primitiveLabel: Record<string, string> = {
 ---
 
 <Layout title="Recipes — Scudra" description="A collection of cloud agent recipes.">
-  <section class="sc-container" style="padding-block: 5rem;">
-    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+  <section class="sc-container py-20">
+    <p class="text-xs uppercase tracking-[0.12em] text-ink-muted mb-4" data-reveal>
       Recipes
     </p>
-    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem;">
+    <h1 class="font-serif text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1] tracking-tight mb-4" data-reveal>
       Cloud agent recipes
     </h1>
-    <p style="color: var(--sc-ink-muted); max-width: 55ch; margin-bottom: 3rem; line-height: 1.6;">
+    <p class="text-ink-muted max-w-[55ch] mb-12 leading-relaxed" data-reveal>
       Each recipe is a real, runnable agent. Study it, fork it, and adapt it to your own work.
     </p>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {recipes.map((recipe) => (
         <a
           href={`/recipes/${recipe.slug}`}
-          style="display: block; padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06); text-decoration: none; color: inherit;"
+          class="group block p-6 bg-paper-warm rounded-sc border border-black/5 hover:border-accent/30 transition-colors no-underline text-inherit"
+          data-reveal
         >
-          <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+          <div class="flex flex-wrap gap-2 mb-3">
             {recipe.primitives.map((p) => (
-              <span style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; background: var(--sc-ink); color: var(--sc-paper); border-radius: 999px;">
+              <span class="text-[0.65rem] uppercase tracking-[0.08em] px-2 py-1 bg-ink text-paper rounded-full">
                 {primitiveLabel[p]}
               </span>
             ))}
           </div>
-          <h2 style="font-family: var(--sc-font-serif); font-size: 1.35rem; margin-bottom: 0.5rem;">{recipe.title}</h2>
-          <p style="color: var(--sc-ink-muted); line-height: 1.5; font-size: 0.95rem;">{recipe.tagline}</p>
-          <span style="display: inline-block; margin-top: 1rem; font-size: 0.85rem; color: var(--sc-accent); font-weight: 500;">
+          <h2 class="font-serif text-xl mb-2 group-hover:text-accent transition-colors">{recipe.title}</h2>
+          <p class="text-ink-muted leading-relaxed text-sm">{recipe.tagline}</p>
+          <span class="inline-block mt-4 text-sm text-accent font-medium">
             Read recipe →
           </span>
         </a>

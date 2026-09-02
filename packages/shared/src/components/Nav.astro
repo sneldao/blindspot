@@ -2,15 +2,15 @@
 import { SITE, NAV } from "../index.js"
 ---
 
-<header class="sc-surface">
-  <nav class="sc-container" style="display: flex; align-items: center; justify-content: space-between; padding-block: 1.25rem;">
-    <a href="/" style="font-family: var(--sc-font-serif); font-size: 1.5rem; text-decoration: none; color: var(--sc-ink);">
+<header class="bg-paper/80 backdrop-blur-sm sticky top-0 z-50 border-b border-black/5">
+  <nav class="sc-container flex items-center justify-between py-5">
+    <a href="/" class="font-serif text-2xl text-ink no-underline tracking-tight">
       {SITE.name}
     </a>
-    <ul style="display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; font-size: 0.875rem;">
+    <ul class="flex items-center gap-6 list-none m-0 p-0 text-sm">
       {NAV.map((item) => (
         <li>
-          <a href={item.href} style="text-decoration: none; color: var(--sc-ink-muted);">
+          <a href={item.href} class="text-ink-muted hover:text-ink transition-colors no-underline">
             {item.label}
           </a>
         </li>

@@ -3,15 +3,15 @@ import Layout from "../layouts/Layout.astro"
 ---
 
 <Layout title="Manifesto — Scudra" description="Why cloud-native agents are the next shift in software.">
-  <article class="sc-container" style="padding-block: 5rem; max-width: 68ch;">
-    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+  <article class="sc-container py-20 max-w-prose">
+    <p class="text-xs uppercase tracking-[0.12em] text-ink-muted mb-4" data-reveal>
       Manifesto
     </p>
-    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 2rem;">
+    <h1 class="font-serif text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1] tracking-tight mb-8" data-reveal>
       The next shift in software is not bigger models. It is smaller, cloud-native agents.
     </h1>
 
-    <div style="display: flex; flex-direction: column; gap: 1.5rem; color: var(--sc-ink-muted); line-height: 1.7; font-size: 1.05rem;">
+    <div class="flex flex-col gap-6 text-ink-muted leading-[1.7] text-[1.05rem]" data-reveal>
       <p>
         For decades, we ran software on our own machines. Then we rented servers in the cloud. Then we moved to functions and containers. Each shift made compute more abstract, more elastic, more ephemeral.
       </p>
@@ -22,27 +22,27 @@ import Layout from "../layouts/Layout.astro"
         A cloud-native agent is a program whose body is infrastructure. It can be a browser in Frankfurt, a sandbox in Iowa, or a desktop in Singapore. It starts with an API call and leaves no persistent state behind. It is the right shape for a world where trust is scarce and attention is expensive.
       </p>
 
-      <h2 style="font-family: var(--sc-font-serif); font-size: 1.75rem; color: var(--sc-ink); margin-top: 1.5rem;">The primitives</h2>
-      <p>
+      <h2 class="font-serif text-3xl text-ink mt-6" data-reveal>The primitives</h2>
+      <p data-reveal>
         Every cloud agent is built from three primitives: a browser, a sandbox, and a desktop. The browser sees the public web. The sandbox runs code safely. The desktop manipulates interfaces built for humans. Together they cover almost every automated task a person can do online.
       </p>
-      <p>
+      <p data-reveal>
         Solari is the platform that makes these primitives one API. Scudra is the lab that shows what they can do.
       </p>
 
-      <h2 style="font-family: var(--sc-font-serif); font-size: 1.75rem; color: var(--sc-ink); margin-top: 1.5rem;">Why ephemerality matters</h2>
-      <p>
+      <h2 class="font-serif text-3xl text-ink mt-6" data-reveal>Why ephemerality matters</h2>
+      <p data-reveal>
         An agent that persists is an agent that can be profiled. Its IP becomes reputation. Its browser fingerprint becomes identity. Its storage becomes liability. Ephemerality is not just a security feature; it is a design principle.
       </p>
-      <p>
+      <p data-reveal>
         When an agent is born, acts, and dies in the same request, the investigation leaves with it. This changes what is possible: competitive research without retaliation, sensitive data without custody, automated operations without attribution.
       </p>
 
-      <h2 style="font-family: var(--sc-font-serif); font-size: 1.75rem; color: var(--sc-ink); margin-top: 1.5rem;">What Scudra is building</h2>
-      <p>
+      <h2 class="font-serif text-3xl text-ink mt-6" data-reveal>What Scudra is building</h2>
+      <p data-reveal>
         Scudra is a living cookbook. Every recipe is a real, runnable agent. Every experience is a demonstration of what cloud agents can do. Every essay argues for a world where software is no longer bound to a single machine.
       </p>
-      <p>
+      <p data-reveal>
         We are not trying to replace developers. We are trying to give them a new primitive: the agent as a first-class building block of the internet.
       </p>
     </div>

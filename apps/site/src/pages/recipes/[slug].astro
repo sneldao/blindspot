@@ -21,41 +21,33 @@ const primitiveLabel: Record<string, string> = {
 ---
 
 <Layout title={`${recipe.title} — Scudra`} description={recipe.tagline}>
-  <article class="sc-container" style="padding-block: 5rem; max-width: 68ch;">
-    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
-      <a href="/recipes" style="text-decoration: none; color: inherit;">← Recipes</a>
+  <article class="sc-container py-20 max-w-prose" data-reveal>
+    <p class="text-xs uppercase tracking-[0.12em] text-ink-muted mb-4">
+      <a href="/recipes" class="no-underline text-inherit hover:text-ink">← Recipes</a>
     </p>
 
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+    <div class="flex flex-wrap gap-2 mb-4">
       {recipe.primitives.map((p) => (
-        <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.6rem; background: var(--sc-ink); color: var(--sc-paper); border-radius: 999px;">
+        <span class="text-[0.7rem] uppercase tracking-[0.08em] px-2.5 py-1 bg-ink text-paper rounded-full">
           {primitiveLabel[p]}
         </span>
       ))}
     </div>
 
-    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem;">
+    <h1 class="font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.1] tracking-tight mb-4">
       {recipe.title}
     </h1>
-    <p style="font-size: 1.125rem; color: var(--sc-ink-muted); line-height: 1.6; margin-bottom: 2rem;">
+    <p class="text-lg text-ink-muted leading-relaxed mb-8">
       {recipe.description}
     </p>
 
-    {recipe.status === "live" && recipe.demo && (
-      <a
-        href={recipe.demo}
-        style="display: inline-block; padding: 0.75rem 1.25rem; background: var(--sc-accent); color: white; border-radius: var(--sc-radius); text-decoration: none; font-weight: 500; margin-right: 0.75rem;"
-      >
-        Try the experience
-      </a>
-    )}
-    {recipe.source && (
-      <a
-        href={`https://github.com/scudra/scudra/tree/main/${recipe.source}`}
-        style="display: inline-block; padding: 0.75rem 1.25rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);"
-      >
-        View source
-      </a>
-    )}
+    <div class="flex flex-wrap gap-3">
+      {recipe.status === "live" && recipe.demo && (
+        <a href={recipe.demo} class="sc-button-accent">Try the experience</a>
+      )}
+      {recipe.source && (
+        <a href={`https://github.com/scudra/scudra/tree/main/${recipe.source}`} class="sc-button-secondary">View source</a>
+      )}
+    </div>
   </article>
 </Layout>

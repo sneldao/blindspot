@@ -3,41 +3,37 @@ import Layout from "../../layouts/Layout.astro"
 ---
 
 <Layout title="Experiences — Scudra" description="Interactive cloud agent experiences built by Scudra.">
-  <section class="sc-container" style="padding-block: 5rem;">
-    <p style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--sc-ink-muted); margin-bottom: 1rem;">
+  <section class="sc-container py-20">
+    <p class="text-xs uppercase tracking-[0.12em] text-ink-muted mb-4" data-reveal>
       Experiences
     </p>
-    <h1 style="font-family: var(--sc-font-serif); font-size: clamp(2.25rem, 5vw, 3.5rem); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem;">
+    <h1 class="font-serif text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1] tracking-tight mb-4" data-reveal>
       Interactive experiences
     </h1>
-    <p style="color: var(--sc-ink-muted); max-width: 55ch; margin-bottom: 3rem; line-height: 1.6;">
+    <p class="text-ink-muted max-w-[55ch] mb-12 leading-relaxed" data-reveal>
       These are not static demos. They are real agents you can run, inspect, and fork.
     </p>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem;">
-      <article id="blindspot" style="padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06);">
-        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sc-ink-muted); margin-bottom: 0.75rem;">Live</p>
-        <h2 style="font-family: var(--sc-font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">Blindspot</h2>
-        <p style="color: var(--sc-ink-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <article id="blindspot" class="p-6 bg-paper-warm rounded-sc border border-black/5" data-reveal>
+        <p class="text-[0.7rem] uppercase tracking-[0.08em] text-ink-muted mb-3">Live</p>
+        <h2 class="font-serif text-2xl mb-2">Blindspot</h2>
+        <p class="text-ink-muted leading-relaxed mb-6">
           A privacy-preserving onchain investigation agent. Search an ENS name and watch the dossier declassify as the agent works.
         </p>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <a href="/experiences/blindspot" style="display: inline-block; padding: 0.6rem 1rem; background: var(--sc-accent); color: white; border-radius: var(--sc-radius); text-decoration: none; font-weight: 500;">
-            Open dossier
-          </a>
-          <a href="/recipes/blindspot" style="display: inline-block; padding: 0.6rem 1rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); text-decoration: none; color: var(--sc-ink);">
-            Read recipe
-          </a>
+        <div class="flex flex-wrap gap-3">
+          <a href="/experiences/blindspot" class="sc-button-accent">Open dossier</a>
+          <a href="/recipes/blindspot" class="sc-button-secondary">Read recipe</a>
         </div>
       </article>
 
-      <article style="padding: 1.5rem; background: var(--sc-paper-warm); border-radius: var(--sc-radius); border: 1px solid rgba(0,0,0,0.06); opacity: 0.65;">
-        <p style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sc-ink-muted); margin-bottom: 0.75rem;">Coming soon</p>
-        <h2 style="font-family: var(--sc-font-serif); font-size: 1.5rem; margin-bottom: 0.5rem;">Stealth Scraper</h2>
-        <p style="color: var(--sc-ink-muted); line-height: 1.5; margin-bottom: 1.5rem;">
+      <article class="p-6 bg-paper-warm rounded-sc border border-black/5 opacity-65" data-reveal>
+        <p class="text-[0.7rem] uppercase tracking-[0.08em] text-ink-muted mb-3">Coming soon</p>
+        <h2 class="font-serif text-2xl mb-2">Stealth Scraper</h2>
+        <p class="text-ink-muted leading-relaxed mb-6">
           A distributed witness that captures web pages from multiple egress points and compares what each location sees.
         </p>
-        <span style="display: inline-block; padding: 0.6rem 1rem; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--sc-radius); color: var(--sc-ink-dim);">
+        <span class="inline-block sc-button-secondary opacity-75 cursor-default">
           In the lab
         </span>
       </article>

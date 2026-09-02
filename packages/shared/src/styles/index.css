@@ -1,4 +1,4 @@
-/* Scudra design tokens — warm, editorial, paper-and-ink */
+/* Scudra CSS custom properties — consumed by runtime code and as fallbacks */
 :root {
   --sc-paper: #faf8f3;
   --sc-paper-warm: #f5f1e8;
@@ -17,33 +17,4 @@
 
   --sc-radius: 8px;
   --sc-max-width: 1120px;
-}
-
-html {
-  background: var(--sc-paper);
-  color: var(--sc-ink);
-  font-family: var(--sc-font-sans);
-  letter-spacing: -0.01em;
-}
-
-.sc-surface {
-  background: var(--sc-paper);
-  color: var(--sc-ink);
-}
-
-.sc-container {
-  max-width: var(--sc-max-width);
-  margin-inline: auto;
-  padding-inline: 1.5rem;
-}
-
-.sc-link {
-  color: var(--sc-accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: rgba(196, 95, 52, 0.3);
-}
-
-.sc-link:hover {
-  text-decoration-color: var(--sc-accent);
 }
