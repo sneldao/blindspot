@@ -12,4 +12,14 @@ Spawns a sandbox, executes Python or shell code, and returns the result. The VM 
 
 ## Why it matters
 
-LLMs write code, but you should not run it on your own machine. An ephemeral sandbox is the ideal execution environment for generated or untrusted code.
+LLMs write code, but you should not run it on your own machine. An ephemeral sandbox is the ideal execution environment for generated or untrusted code. The essay thesis: *LLMs write code — where it runs is the whole security model.*
+
+**The experience (planned): untrusted code, staged.** The visitor pastes code and watches it execute inside a live-visualized ephemeral VM — process tree, filesystem churn, network calls — then watches the VM die. The ephemerality is the spectacle: the teardown moment is the demo.
+
+## Solari foundation
+
+- `examples/sandbox-code-interpreter-py`
+
+## Status
+
+Cooking. Source available; experience shipping. See [`content/roadmap.md`](../roadmap.md).
