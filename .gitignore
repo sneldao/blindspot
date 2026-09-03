@@ -9,3 +9,4 @@ screenshot.png
 reports/
 .astro/
 dist/
+.commandcode/

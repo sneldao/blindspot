@@ -40,7 +40,7 @@ and one all-three experience so the lab covers the full taxonomy.
 | Desktop Operator — The Controller | Desktop | `desktop-computer-use-py` | Planned |
 | Browser Profiles — The Chameleon | Browser | `browser-profiles-ts` | Planned |
 | Session Recording — The Archivist | Browser | `browser-session-recording-py` | Planned |
-| Sandbox Preview — The Builder | Sandbox | `sandbox-port-preview-ts`, `sandbox-quickstart-ts` | Planned |
+| Sandbox Preview — The Builder | Sandbox | `sandbox-port-preview-ts`, `sandbox-quickstart-ts` | **In build** (`apps/builder`) |
 
 ## Progress log
 
@@ -50,6 +50,14 @@ and one all-three experience so the lab covers the full taxonomy.
   pure `lib/` modules + CLI + 15 unit tests (geo-diff engine, SSRF guard).
   Geo-diff works end to end with a `SOLARI_API_KEY`. Next: polish the UI
   beats, capture demo material, flip the recipe to live on the site.
+- **The Builder** (2026-09) — app scaffolded at `apps/builder` on the house
+  pattern: blueprint engine (deterministic prompt → app spec, the LLM seam),
+  pure HTML renderer, sandbox boot with public preview URL + reachability
+  check, guaranteed teardown on every path, SSE beats, tombstone finale,
+  CLI, 11 unit tests. Repo-wide suite now 62 tests. Note: the Blindspot
+  `SOLARI_API_KEY` returns 401 — a fresh key is needed for live runs.
+- **Sequencing update** — The Builder was built before The Chameleon and
+  The Archivist (it shares the most infrastructure with Blindspot/Witness).
 
 ## Sequencing
 

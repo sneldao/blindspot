@@ -1,0 +1,55 @@
+---
+import "@fontsource/fraunces/400.css"
+import "@fontsource/inter/400.css"
+import "@fontsource/inter/500.css"
+import "@fontsource/jetbrains-mono/400.css"
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <style is:global>
+      :root {
+        --paper: #faf8f3;
+        --paper-warm: #f4f1e8;
+        --ink: #26262e;
+        --ink-muted: #6d6d78;
+        --accent: #c26b3f;
+        --line: #e3ddd0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "Inter", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      h1,
+      h2 {
+        font-family: "Fraunces", Georgia, serif;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+      }
+      a {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

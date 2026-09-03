@@ -23,4 +23,8 @@ The most visceral proof that an agent's body can be infrastructure. The essay th
 
 ## Status
 
-Planned. See [`content/roadmap.md`](../roadmap.md).
+In build — experience app scaffolded at
+[`apps/builder`](../../apps/builder) (SSE beats, preview URL, teardown
+tombstone, 11 unit tests, CLI). Next: live smoke test with a fresh
+`SOLARI_API_KEY`, then polish the UI beats. See
+[`content/roadmap.md`](../roadmap.md).
