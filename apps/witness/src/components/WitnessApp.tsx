@@ -3,6 +3,8 @@ import type { EgressLocation, LocationObservation, DiffLine } from "../lib/types
 
 type Phase = "idle" | "running" | "done"
 
+type CardBeat = "launching" | "alibi" | "reading" | "ok" | "failed"
+
 interface State {
   phase: Phase
   url: string
@@ -24,6 +26,13 @@ const initial: State = {
   identical: false,
   error: null,
 }
+
+const EXAMPLES = [
+  "https://www.bbc.com",
+  "https://www.netflix.com",
+  "https://www.airbnb.com",
+  "https://www.spotify.com",
+]
 
 export default function WitnessApp() {
   const [state, setState] = useState<State>(initial)
@@ -80,6 +89,22 @@ export default function WitnessApp() {
   return (
     <section>
       <WitnessForm input={input} setInput={setInput} onObserve={observe} busy={state.phase === "running"} />
+      {state.phase === "idle" && !state.error && (
+        <div className="witness-examples">
+          <span className="examples-label">Try:</span>
+          {EXAMPLES.map((e) => (
+            <button key={e} type="button" onClick={() => setInput(e)}>
+              {new URL(e).hostname.replace("www.", "")}
+            </button>
+          ))}
+        </div>
+      )}
+      {state.phase === "running" && (
+        <p className="witness-ticker" aria-live="polite">
+          Witnessing <code>{state.url}</code> from {state.locations.length || "three"} locations — every browser
+          ephemeral, every egress residential.
+        </p>
+      )}
       {state.error && (
         <p role="alert" className="witness-error">
           {state.error}
@@ -93,7 +118,7 @@ export default function WitnessApp() {
 }
 
 const STYLES = `
-  .witness-form { display: flex; gap: 0.75rem; margin: 2rem 0 2.5rem; }
+  .witness-form { display: flex; gap: 0.75rem; margin: 2rem 0 1rem; }
   .witness-form input {
     flex: 1; padding: 0.75rem 1rem; border: 1px solid var(--line);
     border-radius: 8px; background: var(--paper-warm); color: var(--ink); font: inherit;
@@ -103,19 +128,66 @@ const STYLES = `
     background: var(--accent); color: #fff; font: inherit; font-weight: 500; cursor: pointer;
   }
   .witness-form button:disabled { opacity: 0.6; cursor: wait; }
+  .witness-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .examples-label { font-size: 0.8rem; color: var(--ink-muted); }
+  .witness-examples button {
+    font: inherit; font-size: 0.8rem; padding: 0.35rem 0.85rem; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent; color: var(--ink-muted); cursor: pointer;
+  }
+  .witness-examples button:hover { color: var(--ink); border-color: var(--ink-muted); }
+  .witness-ticker {
+    color: var(--ink-muted); font-size: 0.9rem; margin: 0 0 1.5rem;
+    animation: wfade 0.4s ease;
+  }
+  @keyframes wfade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes wpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   .witness-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem;
   }
-  .witness-card { border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; background: var(--paper-warm); }
-  .witness-card h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
-  .witness-card p { font-size: 0.9rem; margin: 0.4rem 0; }
-  .witness-card .egress { color: var(--ink-muted); font-size: 0.8rem; }
-  .witness-card .label {
-    display: inline-block; min-width: 4.5rem; color: var(--ink-muted);
-    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+  .witness-card {
+    border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem;
+    background: var(--paper-warm); animation: wfade 0.5s ease;
   }
-  .witness-verdict { margin-top: 2.5rem; padding: 1.5rem; border-top: 2px solid var(--line); }
-  .witness-verdict ul { padding-left: 1.2rem; line-height: 1.7; }
+  .witness-card.ok { border-color: #3e8e5a66; }
+  .witness-card.failed { border-color: #c26b3f88; }
+  .witness-card h2 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+  .witness-card .egress {
+    font-size: 0.8rem; color: var(--ink-muted); margin: 0 0 0.75rem;
+    font-family: "JetBrains Mono", monospace;
+  }
+  .witness-card .title { font-weight: 500; margin: 0 0 0.5rem; line-height: 1.4; }
+  .witness-card .label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--ink-muted); display: inline-block; width: 4.5rem;
+  }
+  .witness-card p { font-size: 0.88rem; margin: 0.3rem 0; }
+  .witness-beat {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: 0.8rem; color: var(--ink-muted); font-style: italic;
+  }
+  .witness-beat::before {
+    content: ""; width: 0.5rem; height: 0.5rem; border-radius: 50%;
+    background: var(--accent); animation: wpulse 1.2s ease infinite;
+  }
+  .witness-stamp {
+    display: inline-block; padding: 0.2rem 0.6rem; border-radius: 6px;
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500;
+  }
+  .witness-stamp.ok { background: #3e8e5a22; color: #2d6b44; }
+  .witness-stamp.failed { background: #c26b3f22; color: #a5542e; }
+  .witness-verdict { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 2px solid var(--line); animation: wfade 0.6s ease; }
+  .witness-verdict h2 { font-size: 1.6rem; margin: 0 0 0.75rem; }
+  .witness-verdict h2.split { color: var(--accent); }
+  .witness-verdict .verdict-summary { color: var(--ink-muted); margin: 0 0 1rem; }
+  .witness-verdict ul { list-style: none; padding: 0; margin: 0; }
+  .witness-verdict li {
+    display: flex; gap: 0.75rem; align-items: baseline; padding: 0.5rem 0;
+    border-bottom: 1px solid var(--line); line-height: 1.6; font-size: 0.92rem;
+  }
+  .witness-verdict li:last-child { border-bottom: none; }
+  .witness-teardown {
+    margin-top: 1.25rem; font-size: 0.85rem; color: var(--ink-muted); font-style: italic;
+  }
   .witness-error { color: var(--accent); }
   code { font-family: "JetBrains Mono", monospace; font-size: 0.8em; }
 `
@@ -157,8 +229,9 @@ function WitnessGrid({ state }: { state: State }) {
           {state.locations.map((loc) => {
             const obs = state.observations[loc.code]
             const ip = state.egress[loc.code]
+            const beat = cardBeat(obs, ip)
             return (
-              <article key={loc.code} className="witness-card">
+              <article key={loc.code} className={`witness-card ${obs ? (obs.ok ? "ok" : "failed") : ""}`}>
                 <h2>{loc.label}</h2>
                 <p className="egress">
                   {ip ? (
@@ -166,11 +239,12 @@ function WitnessGrid({ state }: { state: State }) {
                       egress <code>{ip}</code>
                     </>
                   ) : obs?.error ? (
-                    "—"
+                    "egress —"
                   ) : (
-                    "connecting…"
+                    "assigning exit…"
                   )}
                 </p>
+                {!obs && <BeatLabel beat={beat} />}
                 {obs?.ok ? (
                   <>
                     <p className="title">{obs.title || "(no title)"}</p>
@@ -188,9 +262,17 @@ function WitnessGrid({ state }: { state: State }) {
                       <span className="label">Content</span> {obs.bodyLength.toLocaleString()} chars ·{" "}
                       {(obs.durationMs / 1000).toFixed(1)}s
                     </p>
+                    <p>
+                      <span className={`witness-stamp ok`}>seen</span>
+                    </p>
                   </>
                 ) : obs ? (
-                  <p className="witness-error">{obs.error ?? "Failed."}</p>
+                  <>
+                    <p className="witness-error">{obs.error ?? "Failed."}</p>
+                    <p>
+                      <span className={`witness-stamp failed`}>unseen</span>
+                    </p>
+                  </>
                 ) : null}
               </article>
             )
@@ -201,22 +283,56 @@ function WitnessGrid({ state }: { state: State }) {
   )
 }
 
+function cardBeat(obs: LocationObservation | undefined, ip: string | undefined): CardBeat {
+  if (!obs) return ip ? "reading" : "launching"
+  return obs.ok ? "ok" : "failed"
+}
+
+const BEAT_TEXT: Record<CardBeat, string> = {
+  launching: "launching a stealth browser…",
+  alibi: "confirming the alibi…",
+  reading: "reading the page…",
+  ok: "seen",
+  failed: "unseen",
+}
+
+function BeatLabel({ beat }: { beat: CardBeat }) {
+  return <p className="witness-beat">{BEAT_TEXT[beat]}</p>
+}
+
 function WitnessVerdict({ state }: { state: State }) {
+  const okCount = state.locations.filter((l) => state.observations[l.code]?.ok).length
+  const diffCount = state.differences.length
   return (
     <div className="witness-verdict" aria-live="polite">
-      <h2>{state.identical ? "One web — this time." : "Not one web."}</h2>
-      {state.differences.length > 0 ? (
+      <h2 className={state.identical ? "" : "split"}>
+        {state.identical ? "One web — this time." : "Not one web."}
+      </h2>
+      <p className="verdict-summary">
+        {okCount} of {state.locations.length} locations saw the page
+        {diffCount > 0
+          ? ` · ${diffCount} difference${diffCount === 1 ? "" : "s"} between them`
+          : " · no differences detected"}
+        .
+      </p>
+      {diffCount > 0 ? (
         <ul>
           {state.differences.map((d, i) => (
-            <li key={i}>{d.detail}</li>
+            <li key={i}>
+              <span className={`witness-stamp ${d.kind === "availability" ? "failed" : "ok"}`}>{d.kind}</span>
+              {d.detail}
+            </li>
           ))}
         </ul>
       ) : (
         <p>
-          Every location saw the same page — and every location reached it
-          through a different residential IP. You were never there.
+          Every location saw the same page — and every location reached it through a different residential
+          IP. The page cannot tell them apart. That is the point.
         </p>
       )}
+      <p className="witness-teardown">
+        Teardown complete: every browser closed, every proxy released, nothing kept. You were never there.
+      </p>
     </div>
   )
 }

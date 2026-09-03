@@ -48,8 +48,11 @@ and one all-three experience so the lab covers the full taxonomy.
 - **The Witness** (2026-09) — app scaffolded at `apps/witness` on the
   Blindspot house pattern: Astro SSR + one React island + SSE endpoint +
   pure `lib/` modules + CLI + 15 unit tests (geo-diff engine, SSRF guard).
-  Geo-diff works end to end with a `SOLARI_API_KEY`. Next: polish the UI
-  beats, capture demo material, flip the recipe to live on the site.
+  Geo-diff works end to end with a `SOLARI_API_KEY`. UI polished for
+  launch (2026-09): example-URL chips, running ticker, per-card staged
+  beats (launching → reading → seen/unseen stamps), verdict summary with
+  diff badges, teardown line. Remaining before flip to live: fresh
+  `SOLARI_API_KEY`, a live smoke run, and wiring into the site.
 - **The Builder** (2026-09) — app scaffolded at `apps/builder` on the house
   pattern: blueprint engine (deterministic prompt → app spec, the LLM seam),
   pure HTML renderer, sandbox boot with public preview URL + reachability
