@@ -9,8 +9,10 @@
   "scripts": {
     "dev:site": "pnpm --filter site dev",
     "dev:blindspot": "pnpm --filter blindspot dev",
+    "dev:witness": "pnpm --filter witness dev",
     "build:site": "pnpm --filter site build",
     "build:blindspot": "pnpm --filter blindspot build",
+    "build:witness": "pnpm --filter witness build",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",

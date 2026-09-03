@@ -28,7 +28,8 @@ A cloud agent is a program whose body is infrastructure: a browser in Frankfurt,
 scudra/
 ├── apps/
 │   ├── site/        # Main site: manifesto, recipes, experiences
-│   └── blindspot/   # Flagship interactive experience
+│   ├── blindspot/   # Flagship interactive experience
+│   └── witness/     # The Witness: live geo-diff experience
 ├── packages/
 │   └── shared/      # Design tokens and shared UI
 ├── content/         # Long-form writing and recipe source material
@@ -46,6 +47,9 @@ pnpm dev:site
 
 # In another terminal, start the Blindspot experience
 pnpm dev:blindspot
+
+# Or the Witness geo-diff experience
+pnpm dev:witness
 ```
 
 ## Development
@@ -73,6 +77,12 @@ Each recipe is a real, runnable agent:
 - [Stealth Scraper — The Witness](content/recipes/stealth-scraper.md)
 - [Code Interpreter — The Analyst](content/recipes/code-interpreter.md)
 - [Desktop Operator — The Controller](content/recipes/desktop-operator.md)
+- [Browser Profiles — The Chameleon](content/recipes/browser-profiles.md)
+- [Session Recording — The Archivist](content/recipes/the-archivist.md)
+- [Sandbox Preview — The Builder](content/recipes/the-builder.md)
+
+See [`content/roadmap.md`](content/roadmap.md) for the full operating plan:
+the characters, the thesis, the sequencing, and the publishing formula.
 
 ## Built for
 

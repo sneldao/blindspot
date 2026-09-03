@@ -29,7 +29,7 @@ export const recipes: Recipe[] = [
       "Use a cloud browser with a residential proxy to scrape pages from different egress points. Capture screenshots and structured data without revealing the operator.",
     primitives: ["browser"],
     status: "cooking",
-    source: "examples/browser-stealth-proxy-ts",
+    source: "apps/witness",
   },
   {
     slug: "code-interpreter",
@@ -50,6 +50,36 @@ export const recipes: Recipe[] = [
     primitives: ["desktop"],
     status: "planned",
     source: "examples/desktop-computer-use-py",
+  },
+  {
+    slug: "browser-profiles",
+    title: "Browser Profiles — The Chameleon",
+    tagline: "Wear an identity, shed it, prove that nothing followed you.",
+    description:
+      "Run tasks under a persistent browser profile, then contrast it with an ephemeral session. A live fingerprint audit shows exactly what follows you — and what vanishes.",
+    primitives: ["browser"],
+    status: "planned",
+    source: "examples/browser-profiles-ts",
+  },
+  {
+    slug: "the-archivist",
+    title: "Session Recording — The Archivist",
+    tagline: "A flight recorder for agents.",
+    description:
+      "Run a cloud-browser agent through a real task while session recording captures everything. Scrub the replay of every page seen and every decision made — then the session is destroyed.",
+    primitives: ["browser"],
+    status: "planned",
+    source: "examples/browser-session-recording-py",
+  },
+  {
+    slug: "the-builder",
+    title: "Sandbox Preview — The Builder",
+    tagline: "Prompt. Boot. Build. Vanish.",
+    description:
+      "An agent writes an application and boots it inside a sandbox with a live preview URL. Interact with software born on stage, then watch the sandbox — and the software — be destroyed.",
+    primitives: ["sandbox"],
+    status: "planned",
+    source: "examples/sandbox-port-preview-ts",
   },
 ]
 

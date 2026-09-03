@@ -1,0 +1,59 @@
+---
+import Layout from "../layouts/Layout.astro"
+import WitnessApp from "../components/WitnessApp.tsx"
+---
+
+<Layout
+  title="The Witness — Scudra"
+  description="The same URL, seen from three countries at once. Collect evidence from the web without leaving fingerprints."
+>
+  <main class="witness">
+    <header class="witness-header">
+      <p class="kicker">Scudra — The Witness</p>
+      <h1>The web is not one web.</h1>
+      <p class="lede">
+        Enter a URL. The Witness visits it from the United States, Germany, and
+        Singapore — through residential proxies, from cloud browsers that leave
+        no trace of you. Then it shows you what the world actually sees.
+      </p>
+    </header>
+    <WitnessApp client:load />
+    <footer class="witness-footer">
+      <p>
+        Every session is ephemeral: browser closed, proxy released, nothing
+        kept. <a href="/recipes/stealth-scraper">Read the recipe</a> —
+        <a href="https://scudra.dev">Scudra</a>, built on
+        <a href="https://getsolari.com">Solari</a>.
+      </p>
+    </footer>
+  </main>
+</Layout>
+
+<style>
+  .witness {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+  }
+  .kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    margin: 0 0 1rem;
+  }
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    margin: 0 0 1rem;
+  }
+  .lede {
+    color: var(--ink-muted);
+    max-width: 44rem;
+    line-height: 1.6;
+  }
+  .witness-footer {
+    margin-top: 4rem;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+  }
+</style>
